@@ -1,4 +1,14 @@
-Adding support for non spatial percepts, like sound, to the environment.
+Animats
+=======
+
+Reference code for:
+
+A General Model for Learning and Decision-Making in Artificial Animals by
+Claes Strannegård, Nils Svangård, Jonas Colmsjö, David Lindström, Joscha Bach and Bas Steunebrink
+
+Submitted to IJCAI-17 AGA workshop, Melbourne, Australia
+
+This `dev` branch is work in progress and will contain a completely refactored version of the original code. 
 
 
 Setup
