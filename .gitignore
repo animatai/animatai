@@ -4,3 +4,4 @@ docs
 *.pyc
 *.csv
 output
+config.py
