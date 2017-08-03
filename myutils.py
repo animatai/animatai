@@ -5,6 +5,13 @@
 # Copyright (C) 2017  Jonas Colmsjö, Claes Strannegård
 #
 
+import sys
+
+# Works also when running async
+def writef(string):
+    sys.stdout.write(string)
+    sys.stdout.flush()
+
 class Logging:
     def __init__(self, filename, debug_mode):
         self._filename = filename

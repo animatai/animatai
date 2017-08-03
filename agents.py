@@ -11,6 +11,7 @@ import random
 from utils import turn_heading
 from utils import distance_squared
 from myutils import Logging
+from myutils import DotDict
 
 # Setup logging
 # =============
@@ -59,11 +60,14 @@ class Agent(Thing):
     There is an optional slot, .performance, which is a number giving
     the performance measure of the agent in its environment."""
 
-    def __init__(self, program=None):
+    # pylint: disable=too-many-instance-attributes
+
+    def __init__(self, program=None, name=None):
         super().__init__()
         self.bump = False
         self.alive = True
         self.holding = []
+        self.__name__ = name
         self.direction = Direction(Direction.R)
         self.performance = 0
         if program:
@@ -153,6 +157,7 @@ class Environment:
         do. If there are interactions between them, you'll need to
         override this method."""
         if not self.is_done():
+
             actions = []
             for agent in self.agents:
                 action, nsaction = None, None
@@ -173,6 +178,7 @@ class Environment:
 
     def run(self, steps=1000):
         """Run the Environment for given number of time steps."""
+
         for i in range(steps):
             if self.is_done():
                 return
@@ -295,12 +301,21 @@ class XYEnvironment(Environment):
     as (0, 1), and a .holding slot, which should be a list of things
     that are held."""
 
-    def __init__(self, width=10, height=10):
+    # pylint: disable=too-many-instance-attributes
+
+    def __init__(self, width=10, height=10, wss=None, wss_cfg=None):
         super().__init__()
 
         self.width = width
         self.height = height
         self.observers = []
+
+        self.wss = wss
+        if wss_cfg:
+            self.wss_cfg = DotDict(wss_cfg)
+        if self.wss and self.wss_cfg:
+            self.wss.send_init(wss_cfg)
+
         # Sets iteration start and end (no walls).
         self.x_start, self.y_start = (0, 0)
         self.x_end, self.y_end = (self.width, self.height)
@@ -355,6 +370,9 @@ class XYEnvironment(Environment):
         thing.bump = self.some_things_at(destination, Obstacle)
         if not thing.bump:
             thing.location = destination
+            if self.wss and self.wss_cfg.agents[thing.__name__]:
+                self.wss_cfg.agents[thing.__name__]['pos'] = thing.location
+                self.wss.send_update_agent(thing.__name__, self.wss_cfg.agents[thing.__name__])
             for o in self.observers:
                 o.thing_moved(thing)
             for t in thing.holding:

@@ -9,8 +9,11 @@ import random
 
 from agents import Agent
 from agents import Thing
+from agents import Direction
 from agents import NSArtifact
-from agents import Environment
+from agents import XYEnvironment
+
+from utils import vector_add
 
 from myutils import Logging
 from myutils import DotDict
@@ -31,7 +34,10 @@ random.seed('blind-dog')
 
 MOVES = [(0, -1), (0, 1)]
 
-CFG = DotDict({
+fido_start_pos = (0, 0)
+dido_start_pos = (0,0)
+
+WSS_CFG = DotDict({
     'numTilesPerSquare': (1, 1),
     'drawGrid': True,
     'randomTerrain': 0,
@@ -39,12 +45,12 @@ CFG = DotDict({
     'agents': {
         'fido': {
             'name': 'F',
-            'pos': (0, 0),
+            'pos': fido_start_pos,
             'hidden': False
         },
         'dido': {
             'name': 'D',
-            'pos': (0, 0),
+            'pos': dido_start_pos,
             'hidden': False
         }
     }
@@ -65,10 +71,12 @@ class Dirt(Thing):
 class Bark(NSArtifact):
     pass
 
-class Park(Environment):
-    def __init__(self, wss):
-        super().__init__()
-        self.wss = wss
+class Park(XYEnvironment):
+    def __init__(self, wss, wss_cfg):
+
+        width = len(wss_cfg.terrain.split('\n')[0])
+        height = len(wss_cfg.terrain.split('\n'))
+        super().__init__(width, height, wss, wss_cfg)
 
     def percept(self, agent):
         '''return a list of things that are in our agent's location'''
@@ -80,6 +88,12 @@ class Park(Environment):
         ns_artifacts = self.list_ns_artifacts_at(time)
         return ns_artifacts
 
+    def show_msg(self, msg):
+        if self.wss:
+            self.wss.send_print_message(msg)
+        l.info(msg)
+
+
     def execute_ns_action(self, agent, action, time):
         '''change the state of the environment for a non spatial attribute, like sound'''
 
@@ -88,38 +102,22 @@ class Park(Environment):
                                                                        action,
                                                                        agent.location,
                                                                        time)
-            if self.wss:
-                self.wss.send_print_message(msg)
-            l.info(msg)
+            self.show_msg(msg)
             agent.bark(time)
             self.add_ns_artifact(Bark(), time)
 
 
-    def render(self):
-        self.wss.send_update_agent('fido', CFG.agents.fido)
-        self.wss.send_update_agent('dido', CFG.agents.fido)
-
-
     def execute_action(self, agent, action, time):
         '''changes the state of the environment based on what the agent does.'''
+        super().execute_action(agent, action, time)
 
-        def add_pos(pos1, pos2):
-            return (pos1[0] + pos2[0], pos1[1] + pos2[1])
-
-        def move_down():
-            CFG.agents[agent.__name__]['pos'] = add_pos(CFG.agents[agent.__name__]['pos'], (0, 1))
-
-        if action == "move down":
+        if action == "Forward":
+            # the super class moves the agent for us, just print a status
             msg = '{} decided to {} at location {} and time {}'.format(str(agent)[1:-1],
                                                                        action,
                                                                        agent.location,
                                                                        time)
-            move_down()
-            if self.wss:
-                self.wss.send_print_message(msg)
-                self.wss.send_update_agent(agent.__name__, CFG.agents[agent.__name__])
-            l.info(msg)
-            agent.movedown()
+            self.show_msg(msg)
 
         elif action == "eat":
             items = self.list_things_at(agent.location, tclass=Food)
@@ -129,9 +127,7 @@ class Park(Environment):
                                                                         str(items[0])[1:-1],
                                                                         agent.location,
                                                                         time)
-                    if self.wss:
-                        self.wss.send_print_message(msg)
-                    l.info(msg)
+                    self.show_msg(msg)
                     self.delete_thing(items[0]) #Delete it from the Park after.
 
         elif action == "drink":
@@ -142,9 +138,7 @@ class Park(Environment):
                                                                           str(items[0])[1:-1],
                                                                           agent.location,
                                                                           time)
-                    if self.wss:
-                        self.wss.send_print_message(msg)
-                    l.info(msg)
+                    self.show_msg(msg)
                     self.delete_thing(items[0]) #Delete it from the Park after.
 
         elif action == "watch":
@@ -154,9 +148,7 @@ class Park(Environment):
                                                                           items,
                                                                           agent.location,
                                                                           time)
-            if self.wss:
-                self.wss.send_print_message(msg)
-            l.info(msg)
+            self.show_msg(msg)
 
 
     def is_done(self):
@@ -169,16 +161,11 @@ class Park(Environment):
 
 class BlindDog(Agent):
 
-    def __init__(self, name, prg, wss):
-        super().__init__(prg)
-        self.wss = wss
-        self.__name__ = name
-
     def __repr__(self):
         return '<{} ({})>'.format(self.__name__, self.__class__.__name__)
 
     def movedown(self):
-        self.location += 1
+        self.location = vector_add(self.location, (0, 2))
 
     def eat(self, thing):
         '''returns True upon success or False otherwise'''
@@ -208,7 +195,7 @@ class BlindDog(Agent):
 def program(percepts, nspercepts):
     '''Returns an action and a nsaction based on it's percepts'''
 
-    action = 'move down'
+    action = 'Forward'
     nsaction = 'bark' if random.random() < 0.25 else None
 
     for p in percepts:
@@ -237,25 +224,28 @@ def program(percepts, nspercepts):
 
 # _=param
 def run(wss=None, param=None):
-    param = (param and int(param)) or 10
-    park = Park(wss)
+    l.debug('Running blind_dog with param:', param)
+    param = int(param) if param else 10
+    park = Park(wss, WSS_CFG)
 
-    dog1 = BlindDog('fido', program, wss)
-    dog2 = BlindDog('dido', program, wss)
+    dog1 = BlindDog(program, 'fido')
+    dog2 = BlindDog(program, 'dido')
+
+    dog1.direction = Direction(Direction.D)
+    dog2.direction = Direction(Direction.D)
 
     dogfood = Food()
     water = Water()
     dirt = Dirt()
 
-    park.add_thing(dog1, 1)
-    park.add_thing(dog2, 1)
+    park.add_thing(dog1, fido_start_pos)
+    park.add_thing(dog2, dido_start_pos)
 
-    park.add_thing(dirt, 2)
-    park.add_thing(dogfood, 5)
-    park.add_thing(water, 7)
+    l.debug(dog1.location, dog2.location)
 
-    if wss:
-        wss.send_init(CFG)
+    park.add_thing(dirt, (0, 2))
+    park.add_thing(dogfood, (0, 5))
+    park.add_thing(water, (0, 7))
 
     park.run(param)
 

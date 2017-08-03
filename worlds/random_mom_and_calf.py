@@ -75,7 +75,7 @@ lane = ('XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\n' +
 world = lane + lane + 'XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX'
 
 options = {
-    'world': [x for x in world.split("\n")],
+    'world': world.split('\n'),
     'objectives': ['energy'],
     'blocks': {
         'w': {'w':1},
@@ -103,8 +103,8 @@ options = {
     }
 }
 
-mom_start_pos = (0,1)
-calf_start_pos = (0,4)
+mom_start_pos = (0, 1)
+calf_start_pos = (0, 4)
 
 CFG = {
     'numTilesPerSquare': (1, 1),
@@ -129,7 +129,7 @@ CFG = {
 # =====
 
 def run(wss=None, param=None):
-    param = (param and int(param)) or 10
+    param = int(param) if param else 10
     sea = Sea(options)
 
     mom = Agent(mom_program)

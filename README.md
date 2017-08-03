@@ -26,6 +26,7 @@ Run the program
 * Activate `virtualenv`: `source venv3/bin/activate`
 * Run the server: `python wsserver.py`
 * Run `index.html` in a browser and follow the instructions.
+* It is possible to run a world without the web server like this: `python run_world.py blind_dog`
 
 
 Development

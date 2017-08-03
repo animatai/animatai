@@ -1,3 +1,4 @@
+#!./venv3/bin/python
 # pylint: disable=missing-docstring, global-statement, eval-used, invalid-name, len-as-condition, no-self-use, too-few-public-methods
 #
 # This web sockets server makes it possible to view environments and agents
@@ -15,6 +16,7 @@ import websockets
 import config
 
 from myutils import Logging
+from myutils import writef
 
 
 # Constants and functions
@@ -24,9 +26,7 @@ DEBUG_MODE = True
 l = Logging('wsserver', DEBUG_MODE)
 
 
-def writef(string):
-    sys.stdout.write(string)
-    sys.stdout.flush()
+
 
 
 # Websockets server class
@@ -102,10 +102,6 @@ class WsServer:
 
     def send_update_agent(self, agent, state):
         self.send('w.updateAgent("' + agent + '",' + json.dumps(state) + ')')
-
-    def thing_moved(self, thing):
-        l.debug('thing_moved', thing)
-
 
 
 # Main

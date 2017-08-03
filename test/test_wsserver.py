@@ -41,23 +41,7 @@ class TestWsserver(unittest.TestCase):
     def setUp(self):
         l.info('Testing wsserver...')
 
-    def test_observer(self):
-        l.info('test_observer')
-
-        # the server is not possible to start since there is not handler provided
-        o = WsServer(None)
-        sea = Sea(options)
-        sea.add_observer(o)
-
-        a = Agent()
-        sea.add_thing(a, (1, 1))
-        sea.execute_action(a, 'DiveAndForward', 1)
-
-        # The observer should have been notified about the move
-        # The design does not work with these unit tests, need to check the debug
-        # messages manually
-        self.assertTrue(True)
-
+    # No tests yet...
 
     def tearDown(self):
         l.info('...done with test_wsserver.')
