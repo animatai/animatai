@@ -35,7 +35,7 @@ class Sea(XYEnvironment):
 
         width = len(options.world[0])
         height = len(options.world)
-        super().__init__(width, height)
+        super().__init__(width, height, options.wss, options.wss_cfg)
 
         # add the squid
         x, y = 0, 0
@@ -50,6 +50,7 @@ class Sea(XYEnvironment):
 
 
     def execute_action(self, agent, action, time):
+        self.show_message(agent.__name__ + ' doing ' + action + ' at location ' + str(agent.location) + ' and time ' + str(time))
         def up():
             agent.direction += Direction.L
             agent.bump = self.move_to(agent, agent.direction.move_forward(agent.location))

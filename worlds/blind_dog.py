@@ -88,12 +88,6 @@ class Park(XYEnvironment):
         ns_artifacts = self.list_ns_artifacts_at(time)
         return ns_artifacts
 
-    def show_msg(self, msg):
-        if self.wss:
-            self.wss.send_print_message(msg)
-        l.info(msg)
-
-
     def execute_ns_action(self, agent, action, time):
         '''change the state of the environment for a non spatial attribute, like sound'''
 
@@ -102,7 +96,7 @@ class Park(XYEnvironment):
                                                                        action,
                                                                        agent.location,
                                                                        time)
-            self.show_msg(msg)
+            self.show_message(msg)
             agent.bark(time)
             self.add_ns_artifact(Bark(), time)
 
@@ -117,7 +111,7 @@ class Park(XYEnvironment):
                                                                        action,
                                                                        agent.location,
                                                                        time)
-            self.show_msg(msg)
+            self.show_message(msg)
 
         elif action == "eat":
             items = self.list_things_at(agent.location, tclass=Food)
@@ -127,7 +121,7 @@ class Park(XYEnvironment):
                                                                         str(items[0])[1:-1],
                                                                         agent.location,
                                                                         time)
-                    self.show_msg(msg)
+                    self.show_message(msg)
                     self.delete_thing(items[0]) #Delete it from the Park after.
 
         elif action == "drink":
@@ -138,7 +132,7 @@ class Park(XYEnvironment):
                                                                           str(items[0])[1:-1],
                                                                           agent.location,
                                                                           time)
-                    self.show_msg(msg)
+                    self.show_message(msg)
                     self.delete_thing(items[0]) #Delete it from the Park after.
 
         elif action == "watch":
@@ -148,7 +142,7 @@ class Park(XYEnvironment):
                                                                           items,
                                                                           agent.location,
                                                                           time)
-            self.show_msg(msg)
+            self.show_message(msg)
 
 
     def is_done(self):

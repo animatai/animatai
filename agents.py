@@ -157,7 +157,6 @@ class Environment:
         do. If there are interactions between them, you'll need to
         override this method."""
         if not self.is_done():
-
             actions = []
             for agent in self.agents:
                 action, nsaction = None, None
@@ -178,7 +177,6 @@ class Environment:
 
     def run(self, steps=1000):
         """Run the Environment for given number of time steps."""
-
         for i in range(steps):
             if self.is_done():
                 return
@@ -339,6 +337,11 @@ class XYEnvironment(Environment):
         ns_artifacts = self.list_ns_artifacts_at(time)
         return ns_artifacts
 
+    def show_message(self, msg):
+        if self.wss:
+            self.wss.send_print_message(msg)
+        l.info(msg)
+
     def execute_action(self, agent, action, time):
         agent.bump = False
         if action == 'TurnRight':
@@ -367,6 +370,7 @@ class XYEnvironment(Environment):
     def move_to(self, thing, destination):
         """Move a thing to a new location. Returns True on success or False if there is an Obstacle.
         If thing is holding anything, they move with him."""
+        l.debug('zzz move_to', thing, destination)
         thing.bump = self.some_things_at(destination, Obstacle)
         if not thing.bump:
             thing.location = destination
