@@ -1,0 +1,6 @@
+.DS_Store
+venv*
+docs
+*.pyc
+*.csv
+output

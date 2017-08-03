@@ -1,0 +1,290 @@
+<!--
+
+ Connects to the web sockets server (wsserver) and displays environments and
+ agents. Need to use the JavaScript console to send commands to the server.
+
+-->
+
+<html>
+<head>
+  <style>
+    .leftcolumn {
+       float:left;
+       width:50%;
+    }
+
+    .rightcolumn {
+       float:right;
+       width:50%;
+       font-size: 75%;
+    }
+  </style>
+</head>
+<body>
+
+
+  <p>Open the console and type World.help() for more information</p>
+
+  <div class='leftcolumn'>
+    <canvas id='field'></canvas>
+  </div>
+
+  <div id='messages' class='rightcolumn'></div>
+
+  <script>
+  ;(function () {
+
+    // Setup logging
+    // =============
+
+    var log = console.log.bind(console, 'LOG:');
+    var debug = console.log.bind(console, 'DEBUG:');
+
+    // Constants
+    // =========
+
+    var AUTO_STEP = true;
+    var AGENT_FONT = '32px serif';
+    var TEXTURE_SIZE = [32, 32];
+    var AGENT_FONT_HEIGHT = 32;
+
+    // row, col
+    var TEXTURE_SPRITE = {
+      'G': [0, 0],
+      'a': [0, 0],
+      'D': [2, 0],
+      'W': [14, 13],
+      'b': [14, 13],
+      'F': [13, 1],
+      's': [10, 5],
+      'X': [9, 15]
+    };
+
+    var TERRAIN_PATH = './images/terrain.png'
+
+
+    // Field class
+    // ============
+
+    // constructor
+    var F = function(){
+
+      // Websockets
+      this._ws = null;
+
+      // graphics attributes
+      this._cfg = null;
+
+      this._fieldSize = null;
+      this._terrain = null;
+      this._terrainSize = null;
+
+      this._texture = null;
+      this._ctx = null;
+
+      this._prevRndTerrainType = null;
+
+      this._queue = [];
+      this._queueCnt = 0;
+    };
+
+
+    // Misc
+    // ----
+
+    F.SERVER = "ws://127.0.0.1:5678/";
+
+    function escape(str) {
+      return str.replace(/&/g, "&amp;").replace(/>/g, "&gt;").replace(/</g, "&lt;").replace(/"/g, "&quot;");
+    }
+
+    F.printMessage = function(msg) {
+      document.getElementById('messages').innerHTML += escape(msg) + '<br/>';
+    };
+
+    F.help = function() {
+      var print = console.log.bind(console);
+      print('Connect to a server with World.initWS(serverPath). For instance: World.initWS(World.SERVER)');
+      print('Send a message to the server with World.send(msg). For instance: World.send([\'blind_dog\', 10]) or World.send([\'random_agents\', 10])');
+    };
+
+    F.initWS = function(server) {
+      _ws = new WebSocket(server);
+
+      _ws.onopen = console.log.bind(this);
+      _ws.onclose = console.log.bind(this);
+      _ws.onerror = console.log.bind(this);
+
+      _ws.onmessage = function (event) {
+          console.log(event.data);
+          eval(event.data);
+      };
+    };
+
+    F.send = function(msg) {
+      _ws.send(JSON.stringify(msg));
+    }
+
+    // Public methods
+    // ---------------
+
+    F.prototype.initTerrain = function(cfg) {
+      var self = this;
+      var field = document.getElementById('field');
+
+      self._cfg = cfg;
+
+      if (self._cfg.randomTerrain > 0) {
+        self._cfg.terrain = self._randomTerrain(self._cfg.randomTerrain);
+      }
+
+      self._cfg.squareSize = [TEXTURE_SIZE[0] * self._cfg.numTilesPerSquare[0],
+                              TEXTURE_SIZE[1] * self._cfg.numTilesPerSquare[1]];
+
+      self._terrain = cfg.terrain.split('\n');
+      self._terrainSize = [Math.max.apply(null, self._terrain.map(function(x){return x.length})),
+                           self._terrain.length];
+
+      this._fieldSize = [self._terrainSize[0] * self._cfg.squareSize[0],
+                         self._terrainSize[1] * self._cfg.squareSize[1]];
+
+      field.width = this._fieldSize[0];
+      field.height = this._fieldSize[1];
+
+      self._ctx = field.getContext('2d');
+      self._texture = new Image();
+
+      self._texture.onload = function() {
+        self._draw();
+      };
+      self._texture.src = TERRAIN_PATH;
+    };
+
+    F.prototype.updateAgent = function(agentId, agentCfg) {
+      this._queue.push([agentId, agentCfg]);
+      if (AUTO_STEP) this.step();
+    };
+
+    F.prototype.step = function() {
+      if (!this._queue.length || this._queueCnt >= this._queue.length) return;
+      [agentId, agentCfg] = this._queue[this._queueCnt++];
+      Object.assign(this._cfg.agents[agentId], agentCfg);
+      this._draw();
+    };
+
+    F.prototype.stepTo = function(idx) {
+      idx = (idx < 0) ? 0 : Math.min(idx, this._queue.length);
+      this._queueCnt = idx;
+      this.step();
+    }
+
+    // Private methods
+    // --------------
+
+    F.prototype._draw = function() {
+      this._ctx.clearRect(0, 0, this._fieldSize[0], this._fieldSize[1]);
+      this._drawBackground();
+      this._drawAgents();
+    };
+
+    F.prototype._drawAgents = function() {
+      var self = this;
+
+      Object.keys(self._cfg.agents).forEach(function(k){
+        self._drawAgent(self._cfg.agents[k])
+      });
+    };
+
+    F.prototype._drawAgent = function(agentCfg) {
+      if (agentCfg.hidden) return;
+
+      this._ctx.font = AGENT_FONT;
+      this._ctx.textBaseline = 'top';
+
+      var coord = this._posToCoord(agentCfg.pos);
+      this._ctx.strokeText(agentCfg.name,
+        coord[0] + (this._cfg.squareSize[0]-this._ctx.measureText(agentCfg.name).width)/2,
+        coord[1] + (this._cfg.squareSize[1]-AGENT_FONT_HEIGHT)/2);
+    };
+
+    F.prototype._drawRect = function(pos, size) {
+      this._ctx.strokeRect(pos[0], pos[1], size[0], size[1]);
+    };
+
+    F.prototype._posToCoord = function(pos) {
+      return [pos[0] * this._cfg.squareSize[0], pos[1] * this._cfg.squareSize[1]]
+    }
+
+    F.prototype._drawSquareBackground = function(pos, terrainType) {
+      var coord = this._posToCoord(pos)
+
+      if (this._cfg.drawGrid)
+        this._drawRect(coord, this._cfg.squareSize);
+
+      for (var xTile = 0; xTile < this._cfg.numTilesPerSquare[0]; xTile++) {
+        for (var yTile = 0; yTile < this._cfg.numTilesPerSquare[1]; yTile++) {
+
+          this._ctx.drawImage(this._texture,
+                         TEXTURE_SPRITE[terrainType][0] * TEXTURE_SIZE[0],
+                         TEXTURE_SPRITE[terrainType][1] * TEXTURE_SIZE[1],
+                         TEXTURE_SIZE[0],
+                         TEXTURE_SIZE[1],
+                         coord[0] + xTile * TEXTURE_SIZE[0],
+                         coord[1] + yTile * TEXTURE_SIZE[1],
+                         TEXTURE_SIZE[0],
+                         TEXTURE_SIZE[1]);
+        }
+      }
+    };
+
+    F.prototype._drawBackground = function() {
+      for (var yPos = 0; yPos < this._terrainSize[1]; yPos++) {
+        for (var xPos = 0; xPos < this._terrain[yPos].length; xPos++) {
+          this._drawSquareBackground([xPos, yPos], this._terrain[yPos][xPos]);
+        }
+      }
+    };
+
+    F.prototype._randomTerrainType = function() {
+      var res;
+      var rnd = Math.floor(Math.random() * (Object.keys(TEXTURE_SPRITE).length + 1));
+      if (rnd === Object.keys(TEXTURE_SPRITE).length) {
+        res = '\n';
+      } else {
+        res = Object.keys(TEXTURE_SPRITE)[rnd];
+      }
+
+      // prevent two \n in a row
+      if (res === '\n' && this._prevRndTerrainType === '\n') {
+        res = this._randomTerrainType()
+      }
+
+      this._prevRndTerrainType = res
+      return res;
+    };
+
+    F.prototype._randomTerrain = function(numSquares) {
+      res = '';
+      i = 0;
+      while (i < numSquares) {
+        var terrainType = randomTerrainType();
+        if (terrainType !== '\n')
+          i++;
+        res += terrainType;
+      }
+      return res;
+    };
+
+
+    // Export
+    // ======
+
+    window['World'] = F;
+
+    debug('World class is loaded.');
+
+  }());
+  </script>
+
+</body>
+</html>
