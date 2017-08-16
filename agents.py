@@ -336,9 +336,14 @@ class XYEnvironment(Environment):
 
         # setup rendering in browser if options are there
         if options.wss:
-            self.width = len(options.wss_cfg.terrain[0])
-            self.height = len(options.wss_cfg.terrain)
+            self.wss = options.wss
+            self.wss_cfg = DotDict(options.wss_cfg)
+
+            self.width = len(options.terrain[0])
+            self.height = len(options.terrain)
             self.x_end, self.y_end = (self.width, self.height)
+
+            self.options.wss_cfg['terrain'] = '\n'.join(self.options.terrain)
 
             # build world from things and terrain
             if options.things:
@@ -346,9 +351,11 @@ class XYEnvironment(Environment):
                 self.build_world()
                 self.options.wss_cfg['terrain'] = '\n'.join(self.world)
 
-            self.set_wss(options.wss, options.wss_cfg)
+            self.wss.send_init(self.options.wss_cfg)
 
     def envcode2class(self, code):
+        if not hasattr(self, 'ENV_ENCODING'):
+            return None
         res = [cls for cd, cls in self.ENV_ENCODING if cd == code]
         if res:
             return res[0]
@@ -356,6 +363,8 @@ class XYEnvironment(Environment):
             return None
 
     def class2envcode(self, class_):
+        if not hasattr(self, 'ENV_ENCODING'):
+            return None
         res = [code for code, cls in self.ENV_ENCODING if cls == class_]
         if res:
             return res[0]
@@ -377,8 +386,6 @@ class XYEnvironment(Environment):
 
     # build a spec. (list of strings) to be used by the browser when rendering the world
     def build_world(self):
-        if not self.options.terrain:
-            return
         world = list(map(list, self.options.terrain))
         for thing in self.things:
             x, y = thing.location
@@ -386,11 +393,6 @@ class XYEnvironment(Environment):
             if s:
                 world[y][x] = s
         self.world = list(map(''.join, world))
-
-    def set_wss(self, wss, wss_cfg):
-        self.wss = wss
-        self.wss_cfg = DotDict(wss_cfg)
-        self.wss.send_init(wss_cfg)
 
     def things_near(self, location, radius=None):
         """Return all things within radius of location."""
@@ -444,9 +446,13 @@ class XYEnvironment(Environment):
     def move_to(self, thing, destination):
         """Move a thing to a new location. Returns True on success or False if there is an Obstacle.
         If thing is holding anything, they move with him."""
+        l.debug('zzz move_to', thing, destination)
         thing.bump = self.some_things_at(destination, Obstacle)
         if not thing.bump:
             thing.location = destination
+            if self.wss and self.wss_cfg.agents[thing.__name__]:
+                self.wss_cfg.agents[thing.__name__]['pos'] = thing.location
+                self.wss.send_update_agent(thing.__name__, self.wss_cfg.agents[thing.__name__])
             for o in self.observers:
                 o.thing_moved(thing)
             for t in thing.holding:

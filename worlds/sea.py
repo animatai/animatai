@@ -29,7 +29,6 @@ class Squid(Thing):
     pass
 
 
-
 class Sea(XYEnvironment):
 
     def __init__(self, options):
