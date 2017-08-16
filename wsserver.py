@@ -1,3 +1,4 @@
+#!./venv3/bin/python
 # pylint: disable=missing-docstring, global-statement, eval-used, invalid-name, len-as-condition, no-self-use, too-few-public-methods
 #
 # This web sockets server makes it possible to view environments and agents
@@ -15,18 +16,17 @@ import websockets
 import config
 
 from myutils import Logging
+from myutils import writef
 
 
 # Constants and functions
 # =======================
 
+# number of second between frames in the animation
+FRAME_RATE = 1/8
+
 DEBUG_MODE = True
 l = Logging('wsserver', DEBUG_MODE)
-
-
-def writef(string):
-    sys.stdout.write(string)
-    sys.stdout.flush()
 
 
 # Websockets server class
@@ -55,12 +55,12 @@ class WsServer:
 
             self.message_handler(self, message, param)
 
-            await asyncio.sleep(1)
+            await asyncio.sleep(FRAME_RATE)
 
     async def producer_handler(self, websocket):
         while True:
             self.connected = True
-            await asyncio.sleep(1)
+            await asyncio.sleep(FRAME_RATE)
             if len(self.queue) > 0:
                 await websocket.send(self.queue.pop(0))
 
@@ -103,9 +103,8 @@ class WsServer:
     def send_update_agent(self, agent, state):
         self.send('w.updateAgent("' + agent + '",' + json.dumps(state) + ')')
 
-    def thing_moved(self, thing):
-        l.debug('thing_moved', thing)
-
+    def send_update_terrain(self, terrain):
+        self.send('w.updateTerrain(' + json.dumps(terrain) + ')')
 
 
 # Main

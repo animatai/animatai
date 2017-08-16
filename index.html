@@ -105,7 +105,10 @@
     F.help = function() {
       var print = console.log.bind(console);
       print('Connect to a server with World.initWS(serverPath). For instance: World.initWS(World.SERVER)');
-      print('Send a message to the server with World.send(msg). For instance: World.send([\'blind_dog\', 10]) or World.send([\'random_agents\', 10])');
+      print('Send a message to the server with World.send(msg). The following worlds exist (you can add you own of course):');
+      print('* World.send([\'blind_dog\', 30])');
+      print('* World.send([\'random_agents\', 30])');
+      print('* World.send([\'random_mom_and_calf\', 100])');
     };
 
     F.initWS = function(server) {
@@ -128,6 +131,11 @@
     // Public methods
     // ---------------
 
+    // terrain must be of the same size as before the update
+    F.prototype.setTerrain = function(terrain) {
+      this._terrain = terrain.split('\n');
+    }
+
     F.prototype.initTerrain = function(cfg) {
       var self = this;
       var field = document.getElementById('field');
@@ -141,7 +149,7 @@
       self._cfg.squareSize = [TEXTURE_SIZE[0] * self._cfg.numTilesPerSquare[0],
                               TEXTURE_SIZE[1] * self._cfg.numTilesPerSquare[1]];
 
-      self._terrain = cfg.terrain.split('\n');
+      self.setTerrain(cfg.terrain);
       self._terrainSize = [Math.max.apply(null, self._terrain.map(function(x){return x.length})),
                            self._terrain.length];
 
@@ -160,15 +168,28 @@
       self._texture.src = TERRAIN_PATH;
     };
 
+    F.prototype.updateTerrain = function(terrain) {
+      this._queue.push(['terrain', terrain, null]);
+      if (AUTO_STEP) this.step();
+    };
+
     F.prototype.updateAgent = function(agentId, agentCfg) {
-      this._queue.push([agentId, agentCfg]);
+      this._queue.push(['agent', agentId, agentCfg]);
       if (AUTO_STEP) this.step();
     };
 
     F.prototype.step = function() {
       if (!this._queue.length || this._queueCnt >= this._queue.length) return;
-      [agentId, agentCfg] = this._queue[this._queueCnt++];
-      Object.assign(this._cfg.agents[agentId], agentCfg);
+      [type, p1, p2] = this._queue[this._queueCnt++];
+      if (type === 'agent') {
+        var agentId = p1
+        var agentCfg = p2
+        Object.assign(this._cfg.agents[agentId], agentCfg);
+      }
+      if (type === 'terrain') {
+        var terrain = p1;
+        this.setTerrain(terrain);
+      }
       this._draw();
     };
 

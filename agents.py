@@ -11,10 +11,13 @@ import random
 from utils import turn_heading
 from utils import distance_squared
 from myutils import Logging
+from myutils import DotDict
 
-# Setup logging
-# =============
 
+# Setup constants and logging
+# ===========================
+
+PERCEPTIBLE_DISTANCE = 0
 DEBUG_MODE = True
 l = Logging('agents', DEBUG_MODE)
 
@@ -45,6 +48,9 @@ class NSArtifact:
     def __init__(self, action=None):
         self.action = action
 
+    def __repr__(self):
+        return '<{} ({})>'.format(self.action, self.__class__.__name__)
+
 
 class Agent(Thing):
     """An Agent is a subclass of Thing with one required slot,
@@ -59,11 +65,14 @@ class Agent(Thing):
     There is an optional slot, .performance, which is a number giving
     the performance measure of the agent in its environment."""
 
-    def __init__(self, program=None):
+    # pylint: disable=too-many-instance-attributes
+
+    def __init__(self, program=None, name=None):
         super().__init__()
         self.bump = False
         self.alive = True
         self.holding = []
+        self.__name__ = name
         self.direction = Direction(Direction.R)
         self.performance = 0
         if program:
@@ -155,6 +164,7 @@ class Environment:
         if not self.is_done():
             actions = []
             for agent in self.agents:
+                l.debug('step  - agent', agent, ', location:', agent.location)
                 action, nsaction = None, None
                 if agent.alive:
                     (action, nsaction) = agent.program(self.percept(agent),
@@ -170,6 +180,16 @@ class Environment:
                 self.execute_action(agent, action, time)
 
             self.exogenous_change()
+
+            # render the updated world in the browser
+            self.build_world()
+            if hasattr(self, 'world'):
+                self.wss.send_update_terrain('\n'.join(self.world))
+            for thing in self.things:
+                if self.wss and thing.__name__ in self.wss_cfg.agents:
+                    self.wss_cfg.agents[thing.__name__]['pos'] = thing.location
+                    self.wss.send_update_agent(thing.__name__, self.wss_cfg.agents[thing.__name__])
+
 
     def run(self, steps=1000):
         """Run the Environment for given number of time steps."""
@@ -223,13 +243,12 @@ class Environment:
 
     def delete_thing(self, thing):
         """Remove a thing from the environment."""
+        l.debug('delete_thing', thing)
         try:
             self.things.remove(thing)
         except ValueError as err:
             l.error(err)
-            l.error("  in Environment delete_thing")
-            l.error("  Thing to be removed: {} at {}".format(thing, thing.location))
-            l.error("  from list: {}".format([(thing, thing.location) for thing in self.things]))
+            l.error("in Environment.delete_thing. Thing to be removed: {} at {} from list: {}".format(thing, thing.location, [(thing, thing.location) for thing in self.things]))
         if thing in self.agents:
             self.agents.remove(thing)
 
@@ -287,6 +306,7 @@ class Direction:
             return (x, y + 1)
 
 
+
 class XYEnvironment(Environment):
     """This class is for environments on a 2D plane, with locations
     labelled by (x, y) points, either discrete or continuous.
@@ -295,23 +315,89 @@ class XYEnvironment(Environment):
     as (0, 1), and a .holding slot, which should be a list of things
     that are held."""
 
-    def __init__(self, width=10, height=10):
+    # pylint: disable=too-many-instance-attributes
+
+    def __init__(self, options):
         super().__init__()
+        options = DotDict(options)
+        width = options.width or 10
+        height = options.height or 10
+
+        options = DotDict(options)
+        self.options = options
 
         self.width = width
         self.height = height
         self.observers = []
+
         # Sets iteration start and end (no walls).
         self.x_start, self.y_start = (0, 0)
         self.x_end, self.y_end = (self.width, self.height)
 
-    perceptible_distance = 1
+        # setup rendering in browser if options are there
+        if options.wss:
+            self.width = len(options.wss_cfg.terrain[0])
+            self.height = len(options.wss_cfg.terrain)
+            self.x_end, self.y_end = (self.width, self.height)
+
+            # build world from things and terrain
+            if options.things:
+                self.add_things(options.things)
+                self.build_world()
+                self.options.wss_cfg['terrain'] = '\n'.join(self.world)
+
+            self.set_wss(options.wss, options.wss_cfg)
+
+    def envcode2class(self, code):
+        res = [cls for cd, cls in self.ENV_ENCODING if cd == code]
+        if res:
+            return res[0]
+        else:
+            return None
+
+    def class2envcode(self, class_):
+        res = [code for code, cls in self.ENV_ENCODING if cls == class_]
+        if res:
+            return res[0]
+        else:
+            return None
+
+    # Adds things to the world using the spec. (list of strings) in the options
+    def add_things(self, env):
+        if not env:
+            return
+        width = len(env[0])
+        height = len(env)
+        x, y = 0, 0
+        for y in range(0, height):
+            for x in range(0, width):
+                class_ = self.envcode2class(env[y][x])
+                if class_:
+                    self.add_thing(class_(), (x, y))
+
+    # build a spec. (list of strings) to be used by the browser when rendering the world
+    def build_world(self):
+        if not self.options.terrain:
+            return
+        world = list(map(list, self.options.terrain))
+        for thing in self.things:
+            x, y = thing.location
+            s = self.class2envcode(thing.__class__)
+            if s:
+                world[y][x] = s
+        self.world = list(map(''.join, world))
+
+    def set_wss(self, wss, wss_cfg):
+        self.wss = wss
+        self.wss_cfg = DotDict(wss_cfg)
+        self.wss.send_init(wss_cfg)
 
     def things_near(self, location, radius=None):
         """Return all things within radius of location."""
         if radius is None:
-            radius = self.perceptible_distance
+            radius = PERCEPTIBLE_DISTANCE
         radius2 = radius * radius
+        #l.debug('things_near - location:', location, ',radius2:', radius2, 'things:', [(thing, distance_squared(location, thing.location)) for thing in self.things if distance_squared(location, thing.location) <= radius2])
         return [(thing, radius2 - distance_squared(location, thing.location))
                 for thing in self.things if distance_squared(location, thing.location) <= radius2]
 
@@ -323,6 +409,11 @@ class XYEnvironment(Environment):
         '''return a list of non spatial artifacts at the given point in time'''
         ns_artifacts = self.list_ns_artifacts_at(time)
         return ns_artifacts
+
+    def show_message(self, msg):
+        if self.wss:
+            self.wss.send_print_message(msg)
+        l.info(msg)
 
     def execute_action(self, agent, action, time):
         agent.bump = False
@@ -344,7 +435,8 @@ class XYEnvironment(Environment):
     def execute_ns_action(self, agent, action, time):
         '''change the state of the environment for a non spatial attribute, like sound'''
 
-        self.add_ns_artifact(NSArtifact(action), time)
+        if action:
+            self.add_ns_artifact(NSArtifact(action), time)
 
     def default_location(self, thing):
         return (random.choice(self.width), random.choice(self.height))

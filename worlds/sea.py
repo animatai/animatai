@@ -14,8 +14,9 @@ from agents import XYEnvironment
 from myutils import Logging
 from myutils import DotDict
 
-# Setup logging
-# =============
+
+# Setup constants and logging
+# ===========================
 
 DEBUG_MODE = True
 l = Logging('sea', DEBUG_MODE)
@@ -27,29 +28,16 @@ l = Logging('sea', DEBUG_MODE)
 class Squid(Thing):
     pass
 
+
+
 class Sea(XYEnvironment):
 
     def __init__(self, options):
-        options = DotDict(options)
-        self.options = options
-
-        width = len(options.world[0])
-        height = len(options.world)
-        super().__init__(width, height)
-
-        # add the squid
-        x, y = 0, 0
-        for y in range(0, height):
-            for x in range(0, width):
-                if options.world[y][x] == 's':
-                    self.add_thing(Squid(), (x, y))
-
-                # add the wall between the lanes
-                if options.world[y][x] == 'x':
-                    self.add_thing(Obstacle(), (x, y))
-
+        self.ENV_ENCODING = [('s', Squid), ('X', Obstacle)]
+        super().__init__(options)
 
     def execute_action(self, agent, action, time):
+        self.show_message(agent.__name__ + ' doing ' + action + ' at location ' + str(agent.location) + ' and time ' + str(time))
         def up():
             agent.direction += Direction.L
             agent.bump = self.move_to(agent, agent.direction.move_forward(agent.location))
@@ -65,6 +53,11 @@ class Sea(XYEnvironment):
             # a torus world
             agent.location = (agent.location[0] % self.width, agent.location[1])
 
+        def eat():
+            squid = self.list_things_at(agent.location, Squid)
+            if squid:
+                self.delete_thing(squid[0])
+
         # The direction of the agent should always be 'right' in this world
         assert agent.direction.direction == Direction.R
 
@@ -77,5 +70,7 @@ class Sea(XYEnvironment):
             forward()
         elif action == 'Forward':
             forward()
+        elif action == 'Eat':
+            eat()
         else:
             l.error('execute_action:unknow action', action, 'for agent', agent, 'at time', time)
