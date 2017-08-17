@@ -18,7 +18,7 @@ from myutils import DotDict
 # ===========================
 
 PERCEPTIBLE_DISTANCE = 0
-DEBUG_MODE = True
+DEBUG_MODE = False
 l = Logging('agents', DEBUG_MODE)
 
 # The code
@@ -252,7 +252,6 @@ class Environment:
 
     def delete_thing(self, thing):
         """Remove a thing from the environment."""
-        l.debug('delete_thing', thing)
         try:
             self.things.remove(thing)
         except ValueError as err:
@@ -315,7 +314,6 @@ class Direction:
             return (x, y + 1)
 
 
-
 class XYEnvironment(Environment):
     """This class is for environments on a 2D plane, with locations
     labelled by (x, y) points, either discrete or continuous.
@@ -325,7 +323,6 @@ class XYEnvironment(Environment):
     that are held."""
 
     # pylint: disable=too-many-instance-attributes, arguments-differ
-
 
     def __init__(self, options):
         super().__init__()
@@ -411,7 +408,6 @@ class XYEnvironment(Environment):
         if radius is None:
             radius = PERCEPTIBLE_DISTANCE
         radius2 = radius * radius
-        #l.debug('things_near - location:', location, ',radius2:', radius2, 'things:', [(thing, distance_squared(location, thing.location)) for thing in self.things if distance_squared(location, thing.location) <= radius2])
         return [(thing, radius2 - distance_squared(location, thing.location))
                 for thing in self.things if distance_squared(location, thing.location) <= radius2]
 

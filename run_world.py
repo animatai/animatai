@@ -3,8 +3,9 @@
 import sys
 
 mod = sys.argv[1]
+num = sys.argv[2] or 10
 s = 'import worlds.' + mod
-s += '\nworlds.' + mod + '.run()'
+s += '\nworlds.' + mod + '.run(None, ' + num + ')'
 
 print('Generated python:\n'+s)
 

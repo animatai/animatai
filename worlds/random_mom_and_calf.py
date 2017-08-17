@@ -12,6 +12,7 @@ from myutils import Logging
 from myutils import DotDict
 
 from .sea import Sea
+from .sea import Sing
 from .sea import Squid
 
 # Setup logging
@@ -20,11 +21,10 @@ from .sea import Squid
 DEBUG_MODE = True
 l = Logging('random_mom_and_calf', DEBUG_MODE)
 
+# Mom that moves by random until squid is found. Move forward when there is
+# squid and sing.
 def mom_program(percepts, _):
-    ''' Mom that moves by random until squid is found. Move forward when there is
-        squid and sing.
-    '''
-    l.debug('mom_program - percepts:', percepts)
+
     action, nsaction = None, None
 
     for p in percepts:
@@ -32,31 +32,30 @@ def mom_program(percepts, _):
         thing, _ = p
         if isinstance(thing, Squid):
             l.info('--- MOM FOUND SQUID, EATING AND SINGING! ---')
-            action = 'Eat'
-            nsaction = 'Sing'
+            action = 'eat_and_forward'
+            nsaction = 'sing'
             break
 
     if not action:
         if random.random() < 0.5:
-            action = 'DiveAndForward'
+            action = 'dive_and_forward'
         else:
-            action = 'UpAndforward'
+            action = 'up_and_forward'
 
     return (action, nsaction)
 
 
+# Calf that will by random until hearing song. Dive when hearing song.
+# The world will not permit diving below the bottom surface, so it will
+# just move forward.
 def calf_program(percepts, nspercepts):
-    ''' Calf that will by random until hearing song. Dive when hearing song.
-        The world will not permit diving below the bottom surface, so it will
-        just move forward. '''
 
-    l.debug('calf_program - nspercepts:', nspercepts)
     action, nsaction = None, None
 
     for p in nspercepts:
-        if p.action == 'Sing':
+        if isinstance(p, Sing):
             l.info('--- CALF HEARD SONG, DIVING! ---')
-            action = 'DiveAndForward'
+            action = 'dive_and_forward'
             break
 
     for p in percepts:
@@ -64,14 +63,14 @@ def calf_program(percepts, nspercepts):
         thing, _ = p
         if isinstance(thing, Squid):
             l.info('--- CALF FOUND SQUID, EATING! ---')
-            action = 'Eat'
+            action = 'eat_and_forward'
             break
 
     if not action:
         if random.random() < 0.5:
-            action = 'DiveAndForward'
+            action = 'dive_and_forward'
         else:
-            action = 'UpAndforward'
+            action = 'up_and_forward'
 
     return (action, nsaction)
 
@@ -103,6 +102,8 @@ things = ('XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\n' +
 mom_start_pos = (0, 1)
 calf_start_pos = (0, 4)
 
+# motors perform several actions. The Sea Environment has four available
+# actions: eat, down, up, forward
 OPTIONS = DotDict({
     'terrain': terrain.split('\n'),
     'things': things.split('\n'),
@@ -112,7 +113,7 @@ OPTIONS = DotDict({
         's': {'s':1}
     },
     'rewards':{
-        'eat_and_forward': {
+        'eat_forward_and_sing': {
             's': {
                 'energy': 0.1
             },
@@ -124,11 +125,27 @@ OPTIONS = DotDict({
         'dive_and_forward': {
             '*': -0.002
         },
+        'up_and_forward': {
+            '*': -0.002
+        },
     },
-    'agent':{
-        'network': {
-            'sensors': ['w', 's'],
-            'motors': ['eat_and_forward', 'forward', 'dive_and_forward', 'up_and_forward'],
+    'agents': {
+        'mom': {
+            'sensors': [None, Squid],
+            'motors': [('eat_and_forward', ['eat', 'forward']),
+                       ('forward', ['forward']),
+                       ('dive_and_forward', ['down', 'forward']),
+                       ('up_and_forward', ['up', 'forward']),
+                       ('sing', ['sing'])
+                      ],
+        },
+        'calf': {
+            'sensors': [None, Squid, Sing],
+            'motors': [('eat_and_forward', ['eat', 'forward']),
+                       ('forward', ['forward']),
+                       ('dive_and_forward', ['down', 'forward']),
+                       ('up_and_forward', ['up', 'forward'])
+                      ],
         }
     },
     'wss_cfg': {
@@ -168,7 +185,6 @@ def run(wss=None, param=None):
     sea.add_thing(mom, mom_start_pos)
     sea.add_thing(calf, calf_start_pos)
 
-    l.debug('zzz', sea.is_done())
     sea.run(param)
 
 if __name__ == "__main__":

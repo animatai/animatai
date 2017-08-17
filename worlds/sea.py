@@ -9,8 +9,10 @@
 from agents import Thing
 from agents import Obstacle
 from agents import Direction
+from agents import NSArtifact
 from agents import XYEnvironment
 
+from myutils import DotDict
 from myutils import Logging
 
 
@@ -27,15 +29,41 @@ l = Logging('sea', DEBUG_MODE)
 class Squid(Thing):
     pass
 
+class Sing(NSArtifact):
+    pass
 
+
+# motors are executed instead of single actions. motors consists of several actions
+# and setup in the options for the agent.
 class Sea(XYEnvironment):
 
+    # pylint: disable=arguments-differ
+
     def __init__(self, options):
+        self.options = DotDict(options)
         self.ENV_ENCODING = [('s', Squid), ('X', Obstacle)]
         super().__init__(options)
 
-    def execute_action(self, agent, action, time):
-        self.show_message((agent.__name__ + ' doing ' + action + ' at location ' +
+    def execute_ns_action(self, agent, motor, time):
+        '''change the state of the environment for a non spatial attribute, like sound'''
+
+        nsactions = list(filter(lambda x: x[0] == motor, self.options.agents[agent.__name__]['motors']))
+        if not nsactions:
+            l.info('Motor without nsactions:', motor)
+            return
+
+        # First item in list, second part of tuple
+        nsactions = nsactions[0][1]
+
+        agent.bump = False
+        for nsaction in nsactions:
+            if nsaction == 'sing':
+                self.add_ns_artifact(Sing(), time)
+            else:
+                l.error('execute_action:unknow nsaction', nsaction, 'for agent', agent, 'at time', time)
+
+    def execute_action(self, agent, motor, time):
+        self.show_message((agent.__name__ + ' activating ' + motor + ' at location ' +
                            str(agent.location) + ' and time ' + str(time)))
         def up():
             agent.direction += Direction.L
@@ -60,16 +88,23 @@ class Sea(XYEnvironment):
         # The direction of the agent should always be 'right' in this world
         assert agent.direction.direction == Direction.R
 
+        actions = list(filter(lambda x: x[0] == motor, self.options.agents[agent.__name__]['motors']))
+        if not actions:
+            l.info('Motor without actions:', motor)
+            return
+
+        # First item in list, second part of tuple
+        actions = actions[0][1]
+
         agent.bump = False
-        if action == 'DiveAndForward':
-            down()
-            forward()
-        elif action == 'UpAndforward':
-            up()
-            forward()
-        elif action == 'Forward':
-            forward()
-        elif action == 'Eat':
-            eat()
-        else:
-            l.error('execute_action:unknow action', action, 'for agent', agent, 'at time', time)
+        for action in actions:
+            if action == 'down':
+                down()
+            elif action == 'up':
+                up()
+            elif action == 'forward':
+                forward()
+            elif action == 'eat':
+                eat()
+            else:
+                l.error('execute_action:unknow action', action, 'for agent', agent, 'at time', time)

@@ -10,6 +10,7 @@
 import unittest
 
 from worlds.sea import Sea
+from worlds.sea import Squid
 from agents import Agent
 from agents import Obstacle
 from myutils import Logging
@@ -35,7 +36,18 @@ things = lane + lane + 'XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX'
 options = {
     'things': things.split('\n'),
     'width': 50,
-    'height': 7
+    'height': 7,
+    'agents': {
+        'cachelot': {
+            'sensors': [None, Squid],
+            'motors': [('eat_and_forward', ['eat', 'forward']),
+                       ('forward', ['forward']),
+                       ('dive_and_forward', ['down', 'forward']),
+                       ('up_and_forward', ['up', 'forward']),
+                       ('sing', ['sing'])
+                      ],
+        }
+    },
 }
 
 class TestCachalot(unittest.TestCase):
@@ -60,26 +72,26 @@ class TestCachalot(unittest.TestCase):
         l.info('test_moving_cachalot')
 
         e = Sea(options)
-        a = Agent()
+        a = Agent(None, 'cachelot')
         e.add_thing(a, (1, 1))
 
         self.assertTrue(a.location == (1, 1))
-        e.execute_action(a, 'DiveAndForward', 1)
+        e.execute_action(a, 'dive_and_forward', 1)
         self.assertTrue(a.location == (2, 2))
 
         # Should hit the wall
-        e.execute_action(a, 'DiveAndForward', 1)
+        e.execute_action(a, 'dive_and_forward', 1)
         self.assertTrue(a.location == (3, 2))
 
-        e.execute_action(a, 'Forward', 1)
+        e.execute_action(a, 'forward', 1)
         self.assertTrue(a.location == (4, 2))
 
-        e.execute_action(a, 'UpAndforward', 1)
+        e.execute_action(a, 'up_and_forward', 1)
         self.assertTrue(a.location == (5, 1))
 
         # check that the world is torus, should get back to the same location
         for _ in range(0, 50):
-            e.execute_action(a, 'Forward', 1)
+            e.execute_action(a, 'forward', 1)
 
         self.assertTrue(a.location == (5, 1))
 
@@ -87,11 +99,11 @@ class TestCachalot(unittest.TestCase):
         l.info('test_singing_cachalot')
 
         e = Sea(options)
-        a = Agent()
+        a = Agent(None, 'cachelot')
         e.add_thing(a, (1, 1))
 
         # song at time=1 will be heard by other agents at time=2
-        e.execute_ns_action(a, 'sign', 1)
+        e.execute_ns_action(a, 'sing', 1)
         self.assertTrue(len(e.list_ns_artifacts_at(2)) == 1)
 
 
