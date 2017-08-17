@@ -16,7 +16,7 @@ Setup
 
 * First init `virtualenv` for Python3: `virtualenv -p python3 venv3` (`virutalenv` needs to be installed)
 * Activate `virtualenv`: `source venv3/bin/activate`
-* Install the necessary Python packages: `pip install -r requirements.txt`
+* Install the necessary Python packages: `pip install -r requirements.txt`. Add `--no-compile` when running on ubuntu.
 
 
 Run the program
