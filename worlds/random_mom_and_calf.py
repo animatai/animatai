@@ -23,18 +23,14 @@ l = Logging('random_mom_and_calf', DEBUG_MODE)
 
 # Mom that moves by random until squid is found. Move forward when there is
 # squid and sing.
-def mom_program(percepts, _):
+def mom_program(active_sensors, _):
 
     action, nsaction = None, None
 
-    for p in percepts:
-        # _=distance
-        thing, _ = p
-        if isinstance(thing, Squid):
-            l.info('--- MOM FOUND SQUID, EATING AND SINGING! ---')
-            action = 'eat_and_forward'
-            nsaction = 'sing'
-            break
+    if 's' in active_sensors:
+        l.info('--- MOM FOUND SQUID, EATING AND SINGING! ---')
+        action = 'eat_and_forward'
+        nsaction = 'sing'
 
     if not action:
         if random.random() < 0.5:
@@ -48,23 +44,17 @@ def mom_program(percepts, _):
 # Calf that will by random until hearing song. Dive when hearing song.
 # The world will not permit diving below the bottom surface, so it will
 # just move forward.
-def calf_program(percepts, nspercepts):
+def calf_program(active_sensors, active_ns_sensors):
 
     action, nsaction = None, None
 
-    for p in nspercepts:
-        if isinstance(p, Sing):
-            l.info('--- CALF HEARD SONG, DIVING! ---')
-            action = 'dive_and_forward'
-            break
+    if 'S' in active_ns_sensors:
+        l.info('--- CALF HEARD SONG, DIVING! ---')
+        action = 'dive_and_forward'
 
-    for p in percepts:
-        # _=distance
-        thing, _ = p
-        if isinstance(thing, Squid):
-            l.info('--- CALF FOUND SQUID, EATING! ---')
-            action = 'eat_and_forward'
-            break
+    if 's' in active_sensors:
+        l.info('--- CALF FOUND SQUID, EATING! ---')
+        action = 'eat_and_forward'
 
     if not action:
         if random.random() < 0.5:
@@ -102,16 +92,14 @@ things = ('XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\n' +
 mom_start_pos = (0, 1)
 calf_start_pos = (0, 4)
 
-# motors perform several actions. The Sea Environment has four available
-# actions: eat, down, up, forward
+# `motors` can perform several `actions`. The Sea Environment has four available
+# `actions`: `eat`, `down`, `up`, `forward`
+# `sensors` are boolean variables indicating percepts (`Things` of different kinds)
+# that are perceived. Active `sensors` are sent as input to the program
 OPTIONS = DotDict({
     'terrain': terrain.split('\n'),
     'things': things.split('\n'),
     'objectives': ['energy'],
-    'blocks': {
-        'w': {'w':1},
-        's': {'s':1}
-    },
     'rewards':{
         'eat_forward_and_sing': {
             's': {
@@ -131,7 +119,7 @@ OPTIONS = DotDict({
     },
     'agents': {
         'mom': {
-            'sensors': [None, Squid],
+            'sensors': [(Squid, 's')],
             'motors': [('eat_and_forward', ['eat', 'forward']),
                        ('forward', ['forward']),
                        ('dive_and_forward', ['down', 'forward']),
@@ -140,7 +128,7 @@ OPTIONS = DotDict({
                       ],
         },
         'calf': {
-            'sensors': [None, Squid, Sing],
+            'sensors': [(Squid, 's'), (Sing, 'S')],
             'motors': [('eat_and_forward', ['eat', 'forward']),
                        ('forward', ['forward']),
                        ('dive_and_forward', ['down', 'forward']),

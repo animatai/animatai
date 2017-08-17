@@ -44,10 +44,43 @@ class Sea(XYEnvironment):
         self.ENV_ENCODING = [('s', Squid), ('X', Obstacle)]
         super().__init__(options)
 
+    def percepts_to_sensors(self, agent, percepts_, ns_percept):
+        res = []
+        for p in percepts_:
+            sensors = list(filter(lambda x: isinstance(p[0] if ns_percept else p, x[0]),
+                                  self.options.agents[agent.__name__]['sensors']))
+            sensors = list(map(lambda x: x[1], sensors))
+            if sensors:
+                res += sensors
+
+        return res
+
+    def ns_percepts_to_sensors(self, agent, percepts_):
+        res = []
+        for p in percepts_:
+            sensors = list(filter(lambda x: isinstance(p, x[0]),
+                                  self.options.agents[agent.__name__]['sensors']))
+            sensors = list(map(lambda x: x[1], sensors))
+            if sensors:
+                res += sensors
+
+        return res
+
+    def percept(self, agent):
+        things = self.things_near(agent.location)
+        return self.percepts_to_sensors(agent, things, True)
+
+    def ns_percept(self, agent, time):
+        ns_artifacts = self.list_ns_artifacts_at(time)
+        return self.percepts_to_sensors(agent, ns_artifacts, False)
+
     def execute_ns_action(self, agent, motor, time):
         '''change the state of the environment for a non spatial attribute, like sound'''
+        if not motor:
+            return
 
-        nsactions = list(filter(lambda x: x[0] == motor, self.options.agents[agent.__name__]['motors']))
+        nsactions = list(filter(lambda x: x[0] == motor,
+                                self.options.agents[agent.__name__]['motors']))
         if not nsactions:
             l.info('Motor without nsactions:', motor)
             return
@@ -60,7 +93,8 @@ class Sea(XYEnvironment):
             if nsaction == 'sing':
                 self.add_ns_artifact(Sing(), time)
             else:
-                l.error('execute_action:unknow nsaction', nsaction, 'for agent', agent, 'at time', time)
+                l.error('execute_action:unknow nsaction', nsaction,
+                        'for agent', agent, 'at time', time)
 
     def execute_action(self, agent, motor, time):
         self.show_message((agent.__name__ + ' activating ' + motor + ' at location ' +
@@ -88,7 +122,8 @@ class Sea(XYEnvironment):
         # The direction of the agent should always be 'right' in this world
         assert agent.direction.direction == Direction.R
 
-        actions = list(filter(lambda x: x[0] == motor, self.options.agents[agent.__name__]['motors']))
+        actions = list(filter(lambda x: x[0] == motor,
+                              self.options.agents[agent.__name__]['motors']))
         if not actions:
             l.info('Motor without actions:', motor)
             return
