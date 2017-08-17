@@ -9,7 +9,7 @@
 
 import unittest
 
-from sea import Sea
+from worlds.sea import Sea
 from agents import Agent
 from agents import Obstacle
 from myutils import Logging
@@ -25,15 +25,17 @@ l = Logging('test_cachalot', DEBUG_MODE)
 # Unit tests
 # ==========
 
-lane = ('xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\n' +
-        'wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww\n' +
-        'wwwwwsssswwwwwwwwwwwwwwwwwwwwwwwwwwsssswwwwwwwwwww\n')
+lane = ('XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\n' +
+        '                                                  \n' +
+        '     ssss                          ssss           \n')
 
 # the mother and calf have separate and identical lanes
-world = lane + lane + 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
+things = lane + lane + 'XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX'
 
 options = {
-    'world': [x for x in world.split("\n")]
+    'things': things.split('\n'),
+    'width': 50,
+    'height': 7
 }
 
 class TestCachalot(unittest.TestCase):
@@ -46,7 +48,7 @@ class TestCachalot(unittest.TestCase):
 
         sea = Sea(options)
 
-        for i in range(5, 4):
+        for i in range(5, 9):
             self.assertTrue(len(sea.list_things_at((i, 2))) == 1)
             self.assertTrue(len(sea.list_things_at((i, 5))) == 1)
 

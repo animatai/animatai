@@ -7,7 +7,6 @@
 # Copyright (C) 2017  Jonas Colmsjö, Claes Strannegård
 #
 
-import sys
 import json
 import signal
 import asyncio

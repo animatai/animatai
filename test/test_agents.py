@@ -87,7 +87,7 @@ class TestAgents(unittest.TestCase):
     def test_xyenvironment(self):
         l.info('test_xyenvironment')
 
-        e = XYEnvironment()
+        e = XYEnvironment({})
         a = Agent()
         t = Thing()
 

@@ -12,7 +12,6 @@ from agents import Direction
 from agents import XYEnvironment
 
 from myutils import Logging
-from myutils import DotDict
 
 
 # Setup constants and logging
@@ -36,7 +35,8 @@ class Sea(XYEnvironment):
         super().__init__(options)
 
     def execute_action(self, agent, action, time):
-        self.show_message(agent.__name__ + ' doing ' + action + ' at location ' + str(agent.location) + ' and time ' + str(time))
+        self.show_message((agent.__name__ + ' doing ' + action + ' at location ' +
+                           str(agent.location) + ' and time ' + str(time)))
         def up():
             agent.direction += Direction.L
             agent.bump = self.move_to(agent, agent.direction.move_forward(agent.location))

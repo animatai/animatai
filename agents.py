@@ -67,7 +67,7 @@ class Agent(Thing):
 
     # pylint: disable=too-many-instance-attributes
 
-    def __init__(self, program=None, name=None):
+    def __init__(self, program=None, name='noname'):
         super().__init__()
         self.bump = False
         self.alive = True
@@ -121,6 +121,11 @@ class Environment:
         self.agents = []
         self.ns_artifacts = {} # indexed with time
 
+        # These needs to be set in the subclass when rendering in the browser
+        self.wss = None
+        self.world = None
+        self.wss_cfg = None
+
     def __repr__(self):
         return '<things:{s.things}, agents:{s.agents}, ns_artifacts:{s.ns_artifacts} ({s.__class__.__name__}>)'.format(s=self)
 
@@ -150,6 +155,10 @@ class Environment:
 
     def exogenous_change(self):
         """If there is spontaneous change in the world, override this."""
+        pass
+
+    def build_world(self):
+        """Needs to be overridden."""
         pass
 
     def is_done(self):
@@ -183,7 +192,7 @@ class Environment:
 
             # render the updated world in the browser
             self.build_world()
-            if hasattr(self, 'world'):
+            if self.world and self.wss and self.wss_cfg:
                 self.wss.send_update_terrain('\n'.join(self.world))
             for thing in self.things:
                 if self.wss and thing.__name__ in self.wss_cfg.agents:
@@ -315,40 +324,45 @@ class XYEnvironment(Environment):
     as (0, 1), and a .holding slot, which should be a list of things
     that are held."""
 
-    # pylint: disable=too-many-instance-attributes
+    # pylint: disable=too-many-instance-attributes, arguments-differ
+
 
     def __init__(self, options):
         super().__init__()
-        options = DotDict(options)
-        width = options.width or 10
-        height = options.height or 10
 
         options = DotDict(options)
         self.options = options
-
-        self.width = width
-        self.height = height
+        self.width = options.width or 10
+        self.height = options.height or 10
         self.observers = []
+
+        # Needs to be set in the subclass when used
+        if not hasattr(self, 'ENV_ENCODING'):
+            self.ENV_ENCODING = []
 
         # Sets iteration start and end (no walls).
         self.x_start, self.y_start = (0, 0)
         self.x_end, self.y_end = (self.width, self.height)
+
+        if options.terrain:
+            self.width = len(options.terrain[0])
+            self.height = len(options.terrain)
+            self.x_end, self.y_end = (self.width, self.height)
+
+        # build world from things and terrain
+        if options.things:
+            self.add_things(options.things)
 
         # setup rendering in browser if options are there
         if options.wss:
             self.wss = options.wss
             self.wss_cfg = DotDict(options.wss_cfg)
 
-            self.width = len(options.terrain[0])
-            self.height = len(options.terrain)
-            self.x_end, self.y_end = (self.width, self.height)
 
             self.options.wss_cfg['terrain'] = '\n'.join(self.options.terrain)
 
-            # build world from things and terrain
-            if options.things:
-                self.add_things(options.things)
-                self.build_world()
+            self.build_world()
+            if self.world:
                 self.options.wss_cfg['terrain'] = '\n'.join(self.world)
 
             self.wss.send_init(self.options.wss_cfg)
@@ -359,8 +373,7 @@ class XYEnvironment(Environment):
         res = [cls for cd, cls in self.ENV_ENCODING if cd == code]
         if res:
             return res[0]
-        else:
-            return None
+        return None
 
     def class2envcode(self, class_):
         if not hasattr(self, 'ENV_ENCODING'):
@@ -368,8 +381,7 @@ class XYEnvironment(Environment):
         res = [code for code, cls in self.ENV_ENCODING if cls == class_]
         if res:
             return res[0]
-        else:
-            return None
+        return None
 
     # Adds things to the world using the spec. (list of strings) in the options
     def add_things(self, env):
@@ -440,13 +452,13 @@ class XYEnvironment(Environment):
         if action:
             self.add_ns_artifact(NSArtifact(action), time)
 
-    def default_location(self, thing):
+    # _=thing
+    def default_location(self, _):
         return (random.choice(self.width), random.choice(self.height))
 
     def move_to(self, thing, destination):
         """Move a thing to a new location. Returns True on success or False if there is an Obstacle.
         If thing is holding anything, they move with him."""
-        l.debug('zzz move_to', thing, destination)
         thing.bump = self.some_things_at(destination, Obstacle)
         if not thing.bump:
             thing.location = destination
@@ -461,8 +473,8 @@ class XYEnvironment(Environment):
                 t.location = destination
         return thing.bump
 
+    def add_thing(self, thing, location=(1, 1), exclude_duplicate_class_items=False):
 
-    def add_thing(self, thing, location=(1, 1), exclude_duplicate_class_items=False): #pylint disable=arguments-differ
         """Adds things to the world. If (exclude_duplicate_class_items) then the item won't be
         added if the location has at least one item of the same class."""
         if self.is_inbounds(location):

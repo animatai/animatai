@@ -7,11 +7,12 @@
 
 import random
 
-from .sea import Sea
-from .sea import Squid
 from agents import Agent
 from myutils import Logging
 from myutils import DotDict
+
+from .sea import Sea
+from .sea import Squid
 
 # Setup logging
 # =============
@@ -27,7 +28,8 @@ def mom_program(percepts, _):
     action, nsaction = None, None
 
     for p in percepts:
-        thing, distance = p
+        # _=distance
+        thing, _ = p
         if isinstance(thing, Squid):
             l.info('--- MOM FOUND SQUID, EATING AND SINGING! ---')
             action = 'Eat'
@@ -58,7 +60,8 @@ def calf_program(percepts, nspercepts):
             break
 
     for p in percepts:
-        thing, distance = p
+        # _=distance
+        thing, _ = p
         if isinstance(thing, Squid):
             l.info('--- CALF FOUND SQUID, EATING! ---')
             action = 'Eat'

@@ -35,7 +35,7 @@ random.seed('blind-dog')
 MOVES = [(0, -1), (0, 1)]
 
 fido_start_pos = (0, 0)
-dido_start_pos = (0,0)
+dido_start_pos = (0, 0)
 
 OPTIONS = DotDict({
     #'terrain': 'G\nD\nG\nG\nF\nG\nW\nG\nG\nG',

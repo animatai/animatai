@@ -1,4 +1,5 @@
 #!./venv3/bin/python
+# pylint: disable=missing-docstring, exec-used, invalid-name
 import sys
 
 mod = sys.argv[1]

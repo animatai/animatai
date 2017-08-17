@@ -36,4 +36,5 @@ def handler(wss_, message, param):
         worlds.random_mom_and_calf.run(wss_, param)
 
     else:
-        wss_.send_print_message('unknown message &quot;' + message + '&quot; with param &quot;' + str(param) + '&quot;')
+    wss_.send_print_message(('unknown message &quot;' + message +
+                             '&quot; with param &quot;' + str(param) + '&quot;'))
