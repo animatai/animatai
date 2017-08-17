@@ -100,7 +100,10 @@ things = ('XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\n' +
           'XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX')
 
 
-options = DotDict({
+mom_start_pos = (0, 1)
+calf_start_pos = (0, 4)
+
+OPTIONS = DotDict({
     'terrain': terrain.split('\n'),
     'things': things.split('\n'),
     'objectives': ['energy'],
@@ -127,29 +130,26 @@ options = DotDict({
             'sensors': ['w', 's'],
             'motors': ['eat_and_forward', 'forward', 'dive_and_forward', 'up_and_forward'],
         }
+    },
+    'wss_cfg': {
+        'numTilesPerSquare': (1, 1),
+        'drawGrid': True,
+        'randomTerrain': 0,
+        'agents': {
+            'mom': {
+                'name': 'M',
+                'pos': mom_start_pos,
+                'hidden': False
+            },
+            'calf': {
+                'name': 'c',
+                'pos': calf_start_pos,
+                'hidden': False
+            }
+        }
     }
 })
 
-mom_start_pos = (0, 1)
-calf_start_pos = (0, 4)
-
-CFG = {
-    'numTilesPerSquare': (1, 1),
-    'drawGrid': True,
-    'randomTerrain': 0,
-    'agents': {
-        'mom': {
-            'name': 'M',
-            'pos': mom_start_pos,
-            'hidden': False
-        },
-        'calf': {
-            'name': 'c',
-            'pos': calf_start_pos,
-            'hidden': False
-        }
-    }
-}
 
 # Main
 # =====
@@ -158,8 +158,8 @@ def run(wss=None, param=None):
     l.debug('Running random_mom_and_calf with param:', str(param))
     param = int(param) if param else 10
 
+    options = OPTIONS
     options.wss = wss
-    options.wss_cfg = CFG
     sea = Sea(options)
 
     mom = Agent(mom_program, 'mom')

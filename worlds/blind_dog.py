@@ -38,27 +38,27 @@ fido_start_pos = (0, 0)
 dido_start_pos = (0, 0)
 
 OPTIONS = DotDict({
-    #'terrain': 'G\nD\nG\nG\nF\nG\nW\nG\nG\nG',
     'terrain': 'G\nG\nG\nG\nG\nG\nG\nG\nG\nG'.split('\n'),
-})
-
-WSS_CFG = DotDict({
-    'numTilesPerSquare': (1, 1),
-    'drawGrid': True,
-    'randomTerrain': 0,
-    'agents': {
-        'fido': {
-            'name': 'F',
-            'pos': fido_start_pos,
-            'hidden': False
-        },
-        'dido': {
-            'name': 'D',
-            'pos': dido_start_pos,
-            'hidden': False
+    'wss_cfg': {
+        'numTilesPerSquare': (1, 1),
+        'drawGrid': True,
+        'randomTerrain': 0,
+        'agents': {
+            'fido': {
+                'name': 'F',
+                'pos': fido_start_pos,
+                'hidden': False
+            },
+            'dido': {
+                'name': 'D',
+                'pos': dido_start_pos,
+                'hidden': False
+            }
         }
     }
 })
+
+
 
 # Classes
 # ========
@@ -227,7 +227,6 @@ def run(wss=None, param=None):
 
     options = OPTIONS
     options.wss = wss
-    options.wss_cfg = WSS_CFG
 
     park = Park(options)
     dog1 = BlindDog(program, 'fido')
