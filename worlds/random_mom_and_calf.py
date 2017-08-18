@@ -159,9 +159,11 @@ OPTIONS = DotDict({
 # Main
 # =====
 
-def run(wss=None, param=None):
-    l.debug('Running random_mom_and_calf with param:', str(param))
-    param = int(param) if param else 10
+def run(wss=None, steps=None, seed=None):
+    l.debug('Running random_mom_and_calf in', str(steps), 'steps with seed', seed)
+    steps = int(steps) if steps else 10
+
+    random.seed(seed)
 
     options = OPTIONS
     options.wss = wss
@@ -173,7 +175,7 @@ def run(wss=None, param=None):
     sea.add_thing(mom, mom_start_pos)
     sea.add_thing(calf, calf_start_pos)
 
-    sea.run(param)
+    sea.run(steps)
 
 if __name__ == "__main__":
     run()

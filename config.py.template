@@ -6,12 +6,16 @@
 # 1. import the python file with the world
 # 2. update the handler
 #
-# There are some examples that shows how this is done.
+# There are a some examples that shows how this is done.
 #
+
+# Change to the IP address of the server when using a public server
+SERVER_ADDRESS = 'localhost'
+SERVER_PORT = 5678
 
 #
 # Add the import for the python file for the world here. Place the python code
-# in the worlds folder
+# in the world folder
 #
 
 import worlds.blind_dog
@@ -22,19 +26,23 @@ import worlds.random_mom_and_calf
 # Add a elif statement for each world like this:
 #
 #    elif message == 'blind_dog':
-#        blind_dog.run(wss_, param)
+#        blind_dog.run(wss_)
 #
 
-def handler(wss_, message, param):
-    if message == 'random_agents':
-        worlds.random_agents.run(wss_, param)
+def handler(wss_, world, steps, seed):
+    if world == 'random_agents':
+        worlds.random_agents.run(wss_, steps)
 
-    elif message == 'blind_dog':
-        worlds.blind_dog.run(wss_, param)
+    elif world == 'blind_dog':
+        worlds.blind_dog.run(wss_, steps)
 
-    elif message == 'random_mom_and_calf':
-        worlds.random_mom_and_calf.run(wss_, param)
+    elif world == 'random_mom_and_calf':
+        worlds.random_mom_and_calf.run(wss_, steps, seed)
+
+    #elif message == 'animat':
+    #    (outputPath, outputDir) = animats.main.getOutputPath()
+    #    animats.main.run(param, outputPath, outputDir, wss_)
 
     else:
-    wss_.send_print_message(('unknown message &quot;' + message +
-                             '&quot; with param &quot;' + str(param) + '&quot;'))
+        wss_.send_print_message(('unknown world &quot;' + world +
+                                 '&quot; with param &quot;' + str(steps) + '&quot;'))

@@ -43,7 +43,12 @@
     // Constants
     // =========
 
-    var AUTO_STEP = true;
+    // Frames per second
+    var FRAME_RATE = 20
+
+    var TERRAIN_PATH = './images/terrain.png'
+
+    var AUTO_STEP = false;
     var AGENT_FONT = '32px serif';
     var TEXTURE_SIZE = [32, 32];
     var AGENT_FONT_HEIGHT = 32;
@@ -59,8 +64,6 @@
       's': [10, 5],
       'X': [9, 15]
     };
-
-    var TERRAIN_PATH = './images/terrain.png'
 
 
     // Field class
@@ -99,17 +102,13 @@
       return str.replace(/&/g, "&amp;").replace(/>/g, "&gt;").replace(/</g, "&lt;").replace(/"/g, "&quot;");
     }
 
-    F.printMessage = function(msg) {
-      document.getElementById('messages').innerHTML += escape(msg) + '<br/>';
-    };
-
     F.help = function() {
       var print = console.log.bind(console);
-      print('Connect to a server with World.initWS(serverPath). For instance: World.initWS(World.SERVER) or World.initWS(World.LOCAL_SERVER)');
-      print('Send a message to the server with World.send(msg). The following worlds exist (you can add you own of course):');
+      print('Connect to a server with World.initWS(serverPath). For instance: World.initWS(World.SERVER) or World.initWS(World.LOCAL_SERVER). The connection is closed after 30 seconds.');
+      print('Send a message to the server with World.send(world, steps [, seed]). The following worlds exist (you can add you own of course):');
       print('* World.send([\'blind_dog\', 30])');
       print('* World.send([\'random_agents\', 30])');
-      print('* World.send([\'random_mom_and_calf\', 50])');
+      print('* World.send([\'random_mom_and_calf\', 50, 1])');
     };
 
     F.initWS = function(server) {
@@ -123,6 +122,11 @@
           console.log(event.data);
           eval(event.data);
       };
+
+      // close the web socket after 30 seconds
+      window.setTimeout(function(){
+        _ws.close()
+      }, 30000)
     };
 
     F.send = function(msg) {
@@ -131,6 +135,18 @@
 
     // Public methods
     // ---------------
+
+    F.prototype.start = function() {
+      this.timer = window.setInterval(this.step.bind(this), 1000 / FRAME_RATE);
+    }
+
+    F.prototype.stop = function() {
+      window.clearInterval(this.timer)
+    }
+
+    F.prototype.printMessage = function(msg) {
+      this._queue.push(['message', msg, null]);
+    };
 
     // terrain must be of the same size as before the update
     F.prototype.setTerrain = function(terrain) {
@@ -190,6 +206,9 @@
       if (type === 'terrain') {
         var terrain = p1;
         this.setTerrain(terrain);
+      }
+      if (type === 'message') {
+        document.getElementById('messages').innerHTML += escape(p1) + '<br/>';
       }
       this._draw();
     };

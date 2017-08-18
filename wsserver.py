@@ -21,8 +21,8 @@ from myutils import writef
 # Constants and functions
 # =======================
 
-# number of second between frames in the animation
-FRAME_RATE = 1/8
+# number of second between packges sent to the client
+SEND_RATE = 1/100000
 
 DEBUG_MODE = True
 l = Logging('wsserver', DEBUG_MODE)
@@ -50,16 +50,22 @@ class WsServer:
     async def consumer_handler(self, websocket):
         while True:
             message = await websocket.recv()
-            (message, param) = json.loads(message)
+            message = json.loads(message)
 
-            self.message_handler(self, message, param)
+            if(len(message) == 3):
+                (world, steps, seed) = message
+                self.message_handler(self, world, steps, seed)
 
-            await asyncio.sleep(FRAME_RATE)
+            if(len(message) == 2):
+                (world, steps) = message
+                self.message_handler(self, world, steps, None)
+
+            await asyncio.sleep(SEND_RATE)
 
     async def producer_handler(self, websocket):
         while True:
             self.connected = True
-            await asyncio.sleep(FRAME_RATE)
+            await asyncio.sleep(SEND_RATE)
             if len(self.queue) > 0:
                 await websocket.send(self.queue.pop(0))
 
@@ -85,7 +91,7 @@ class WsServer:
         writef('Waiting for client to connect')
 
         # start the websockets server
-        start_server = websockets.serve(self.handler, '127.0.0.1', 5678)
+        start_server = websockets.serve(self.handler, config.SERVER_ADDRESS, config.SERVER_PORT)
         asyncio.get_event_loop().run_until_complete(start_server)
         asyncio.get_event_loop().run_forever()
 
@@ -95,9 +101,10 @@ class WsServer:
     def send_init(self, cfg):
         self.send('w = new World()')
         self.send('w.initTerrain(' + json.dumps(cfg) + ')')
+        self.send('w.start()')
 
     def send_print_message(self, msg):
-        self.send('World.printMessage("' + msg + '")')
+        self.send('w.printMessage("' + msg + '")')
 
     def send_update_agent(self, agent, state):
         self.send('w.updateAgent("' + agent + '",' + json.dumps(state) + ')')
