@@ -18,7 +18,7 @@ class Logging:
         self._debug_mode = debug_mode
 
     def debug(self, *args):
-        if self._filename:
+        if self._debug_mode:
             print('DEBUG:'+self._filename+':', *args)
 
     def error(self, *args):

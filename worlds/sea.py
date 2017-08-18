@@ -55,17 +55,6 @@ class Sea(XYEnvironment):
 
         return res
 
-    def ns_percepts_to_sensors(self, agent, percepts_):
-        res = []
-        for p in percepts_:
-            sensors = list(filter(lambda x: isinstance(p, x[0]),
-                                  self.options.agents[agent.__name__]['sensors']))
-            sensors = list(map(lambda x: x[1], sensors))
-            if sensors:
-                res += sensors
-
-        return res
-
     def percept(self, agent):
         things = self.things_near(agent.location)
         return self.percepts_to_sensors(agent, things, True)
@@ -73,6 +62,22 @@ class Sea(XYEnvironment):
     def ns_percept(self, agent, time):
         ns_artifacts = self.list_ns_artifacts_at(time)
         return self.percepts_to_sensors(agent, ns_artifacts, False)
+
+    def calc_performance(self, agent, action_performed, nsaction_performed):
+        if not hasattr(agent, 'objectives'):
+            agent.objectives = dict(self.options.objectives)
+
+        for rewarded_action, things_and_objectives in self.options.rewards.items():
+            if action_performed == rewarded_action or nsaction_performed == rewarded_action:
+                for rewarded_thing, obj_and_rewards in things_and_objectives.items():
+                    if rewarded_thing and len(self.list_things_at(agent.location, rewarded_thing)):
+                        for obj, reward in obj_and_rewards.items():
+                            agent.objectives[obj] += reward
+                    elif rewarded_thing is None:
+                        for obj, reward in obj_and_rewards.items():
+                            agent.objectives[obj] += reward
+
+        l.info(agent.__name__, 'status:', agent.objectives)
 
     def execute_ns_action(self, agent, motor, time):
         '''change the state of the environment for a non spatial attribute, like sound'''

@@ -93,28 +93,41 @@ mom_start_pos = (0, 1)
 calf_start_pos = (0, 4)
 
 # `motors` can perform several `actions`. The Sea Environment has four available
-# `actions`: `eat`, `down`, `up`, `forward`
+# `actions`: `eat`, `down`, `up`, `forward`. Thre is also one `nsaction` which is `sing`
 # `sensors` are boolean variables indicating percepts (`Things` of different kinds)
-# that are perceived. Active `sensors` are sent as input to the program
+# that are perceived. Active `sensors` are sent as input to the `program`
 OPTIONS = DotDict({
     'terrain': terrain.split('\n'),
     'things': things.split('\n'),
-    'objectives': ['energy'],
+    'objectives': {'energy': 1},
     'rewards':{
-        'eat_forward_and_sing': {
-            's': {
+        'eat_and_forward': {
+            Squid: {
                 'energy': 0.1
             },
-            '*': -0.05
+            None: {
+                'energy': -0.05
+            }
         },
         'forward': {
-            '*': -0.001
+            None: {
+                'energy': -0.001
+            }
         },
         'dive_and_forward': {
-            '*': -0.002
+            None: {
+                'energy': -0.002
+            }
         },
         'up_and_forward': {
-            '*': -0.002
+            None: {
+                'energy': -0.002
+            }
+        },
+        'sing': {
+            None: {
+                'energy': -0.001
+            }
         },
     },
     'agents': {

@@ -148,6 +148,10 @@ class Environment:
         """Change the world to reflect this action. (Implement this.)"""
         raise NotImplementedError
 
+    def calc_performance(self, agent, action_performed, nsaction_performed):
+        """Change the world to reflect this action. (Implement this.)"""
+        raise NotImplementedError
+
     # thing
     def default_location(self, _):
         """Default location to place a new thing with unspecified location."""
@@ -179,6 +183,10 @@ class Environment:
                     (action, nsaction) = agent.program(self.percept(agent),
                                                        self.ns_percept(agent, time))
                 actions.append((action, nsaction))
+
+            for (agent, act_nsact) in zip(self.agents, actions):
+                action, nsaction = act_nsact
+                self.calc_performance(agent, action, nsaction)
 
             for (agent, act_nsact) in zip(self.agents, actions):
                 _, nsaction = act_nsact
