@@ -14,7 +14,9 @@ This `dev` branch is work in progress and will contain a completely refactored v
 Setup
 =====
 
-* First init `virtualenv` for Python3: `virtualenv -p python3 venv3` (`virutalenv` needs to be installed)
+At least Python 3.5 is needed since `async` is used in `wsserver.py`. I'm using Python 3.6 here.
+
+* First init `virtualenv` for Python3: `virtualenv -p python3.6 venv3` (`virutalenv` needs to be installed)
 * Activate `virtualenv`: `source venv3/bin/activate`
 * Install the necessary Python packages: `pip install -r requirements.txt`. Add `--no-compile` when running on ubuntu.
 

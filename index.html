@@ -92,7 +92,8 @@
     // Misc
     // ----
 
-    F.SERVER = "ws://127.0.0.1:5678/";
+    F.LOCAL_SERVER = "ws://127.0.0.1:5678/";
+    F.SERVER = "ws://aiws.gizur.com:80/";
 
     function escape(str) {
       return str.replace(/&/g, "&amp;").replace(/>/g, "&gt;").replace(/</g, "&lt;").replace(/"/g, "&quot;");
@@ -104,7 +105,7 @@
 
     F.help = function() {
       var print = console.log.bind(console);
-      print('Connect to a server with World.initWS(serverPath). For instance: World.initWS(World.SERVER)');
+      print('Connect to a server with World.initWS(serverPath). For instance: World.initWS(World.SERVER) or World.initWS(World.LOCAL_SERVER)');
       print('Send a message to the server with World.send(msg). The following worlds exist (you can add you own of course):');
       print('* World.send([\'blind_dog\', 30])');
       print('* World.send([\'random_agents\', 30])');
