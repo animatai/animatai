@@ -52,11 +52,11 @@ class WsServer:
             message = await websocket.recv()
             message = json.loads(message)
 
-            if(len(message) == 3):
+            if len(message) == 3:
                 (world, steps, seed) = message
                 self.message_handler(self, world, steps, seed)
 
-            if(len(message) == 2):
+            if len(message) == 2:
                 (world, steps) = message
                 self.message_handler(self, world, steps, None)
 

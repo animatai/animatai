@@ -8,8 +8,8 @@
 import random
 
 from agents import Agent
-from myutils import Logging
 from myutils import DotDict
+from myutils import Logging
 
 from .sea import Sea
 from .sea import Sing

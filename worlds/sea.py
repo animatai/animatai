@@ -45,6 +45,7 @@ class Sea(XYEnvironment):
         super().__init__(options)
 
     def percepts_to_sensors(self, agent, percepts_, ns_percept):
+        # pylint: disable=cell-var-from-loop
         res = []
         for p in percepts_:
             sensors = list(filter(lambda x: isinstance(p[0] if ns_percept else p, x[0]),
@@ -64,6 +65,7 @@ class Sea(XYEnvironment):
         return self.percepts_to_sensors(agent, ns_artifacts, False)
 
     def calc_performance(self, agent, action_performed, nsaction_performed):
+        # pylint: disable=len-as-condition
         if not hasattr(agent, 'objectives'):
             agent.objectives = dict(self.options.objectives)
 

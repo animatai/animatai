@@ -433,6 +433,10 @@ class XYEnvironment(Environment):
             self.wss.send_print_message(msg)
         l.info(msg)
 
+    def calc_performance(self, agent, action_performed, nsaction_performed):
+        '''Change the world to reflect this action. (Implement this.)'''
+        raise NotImplementedError
+
     def execute_action(self, agent, action, time):
         agent.bump = False
         if action == 'TurnRight':

@@ -92,6 +92,9 @@ class Park(XYEnvironment):
         ns_artifacts = self.list_ns_artifacts_at(time)
         return ns_artifacts
 
+    def calc_performance(self, agent, action_performed, nsaction_performed):
+        pass
+
     def execute_ns_action(self, agent, action, time):
         '''change the state of the environment for a non spatial attribute, like sound'''
 
