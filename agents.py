@@ -395,6 +395,11 @@ class XYEnvironment(Environment):
             return res[0]
         return None
 
+    def exogenous_change(self):
+        '''If there is spontaneous change in the world, override this.'''
+        if self.options.exogenous_things_prob and random.random() < self.options.exogenous_things_prob:
+            self.add_things(self.options.exogenous_things)
+
     # Adds things to the world using the spec. (list of strings) in the options
     def add_things(self, env):
         if not env:

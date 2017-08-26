@@ -10,14 +10,22 @@
   <style>
     .leftcolumn {
        float:left;
-       width:50%;
+       width:48%;
+       margin:1%;
+       overflow-y: scroll;
+       overflow-x: scroll
     }
 
     .rightcolumn {
        float:right;
-       width:50%;
+       width:48%;
+       margin:1%;
+       height: 75%;
        font-size: 75%;
+       overflow-y: scroll;
+       overflow-x: scroll
     }
+
   </style>
 </head>
 <body>
@@ -27,6 +35,7 @@
 
   <div class='leftcolumn'>
     <canvas id='field'></canvas>
+    <br/>
   </div>
 
   <div id='messages' class='rightcolumn'></div>
@@ -208,7 +217,8 @@
         this.setTerrain(terrain);
       }
       if (type === 'message') {
-        document.getElementById('messages').innerHTML += escape(p1) + '<br/>';
+        document.getElementById('messages').innerHTML = escape(p1) + '<br/>' +
+          document.getElementById('messages').innerHTML;
       }
       this._draw();
     };

@@ -129,8 +129,10 @@ class Sea(XYEnvironment):
         # First item in list, second part of tuple
         nsactions = nsactions[0][1]
 
-        agent.bump = False
         for nsaction in nsactions:
+            self.show_message(('---' + agent.__name__ + ' activating ' + nsaction + ' at location ' +
+                               str(agent.location) + ' and time ' + str(time) + '---'))
+
             if nsaction == 'sing':
                 self.add_ns_artifact(Sing(), time)
             else:
@@ -208,4 +210,5 @@ class Sea(XYEnvironment):
         print('\n'.join([CSV_SEPARATOR.join([str(x).replace('.',',') for x in line]) for line in res]), file=fp)
         fp.close()
 
+        l.info('At least one agent lived for', len(list(zip(*histories))), 'steps')
         l.info('Output saved to:', outputPath)

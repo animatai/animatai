@@ -82,11 +82,20 @@ terrain = ('WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW\n' +
 # the mother and calf have separate and identical lanes
 things = ('XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\n' +
           '                                                  \n' +
-          '     ssss                          ssss           \n' +
+          '     ss                            ss             \n' +
           'XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\n' +
           '                                                  \n' +
-          '     ssss                          ssss           \n' +
+          '     ss                            ss             \n' +
           'XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX')
+
+# the mother and calf have separate and identical lanes
+exogenous_things = ('                                                  \n' +
+                    '                                                  \n' +
+                    '     ss                            ss             \n' +
+                    '                                                  \n' +
+                    '                                                  \n' +
+                    '     ss                            ss             \n' +
+                    '                                                  ')
 
 
 mom_start_pos = (0, 1)
@@ -99,6 +108,8 @@ calf_start_pos = (0, 4)
 OPTIONS = DotDict({
     'terrain': terrain.split('\n'),
     'things': things.split('\n'),
+    'exogenous_things': exogenous_things.split('\n'),
+    'exogenous_things_prob': 0.01,
     'objectives': {'energy': 1},
     'rewards':{
         'eat_and_forward': {
