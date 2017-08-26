@@ -5,6 +5,8 @@
 # Copyright (C) 2017  Jonas Colmsjö, Claes Strannegård
 #
 
+import os
+import datetime
 
 from agents import Thing
 from agents import Obstacle
@@ -19,9 +21,24 @@ from myutils import Logging
 # Setup constants and logging
 # ===========================
 
+CSV_SEPARATOR = ';'
 DEBUG_MODE = True
 l = Logging('sea', DEBUG_MODE)
 
+
+# Functions
+# ========
+
+def getOutputPath():
+    try:
+        currentDir = os.path.dirname(os.path.abspath(__file__)) + '/..'
+        outputDir = currentDir + os.path.join('/output', datetime.datetime.now().isoformat())
+        os.makedirs(outputDir)
+        return os.path.join(outputDir, "history.csv")
+
+    except OSError as exception:
+        if exception.errno != errno.EEXIST:
+            raise
 
 # Classes
 # ========
@@ -64,10 +81,25 @@ class Sea(XYEnvironment):
         ns_artifacts = self.list_ns_artifacts_at(time)
         return self.percepts_to_sensors(agent, ns_artifacts, False)
 
+    def save_history(self, agent):
+        if not hasattr(agent, 'objective_history'):
+            agent.objective_history = {}
+            for objective in agent.objectives:
+                agent.objective_history[objective] = []
+
+        for objective in agent.objectives:
+            agent.objective_history[objective].append(agent.objectives[objective])
+
+    def check_is_alive(self, agent):
+        for objective in agent.objectives:
+            if agent.objectives[objective] <= 0:
+                agent.alive = False
+
     def calc_performance(self, agent, action_performed, nsaction_performed):
         # pylint: disable=len-as-condition
         if not hasattr(agent, 'objectives'):
-            agent.objectives = dict(self.options.objectives)
+            agent.objectives = self.options.objectives.copy()
+            self.save_history(agent)
 
         for rewarded_action, things_and_objectives in self.options.rewards.items():
             if action_performed == rewarded_action or nsaction_performed == rewarded_action:
@@ -79,6 +111,8 @@ class Sea(XYEnvironment):
                         for obj, reward in obj_and_rewards.items():
                             agent.objectives[obj] += reward
 
+        self.check_is_alive(agent)
+        self.save_history(agent)
         l.info(agent.__name__, 'status:', agent.objectives)
 
     def execute_ns_action(self, agent, motor, time):
@@ -104,6 +138,9 @@ class Sea(XYEnvironment):
                         'for agent', agent, 'at time', time)
 
     def execute_action(self, agent, motor, time):
+        if not motor:
+            return
+
         self.show_message((agent.__name__ + ' activating ' + motor + ' at location ' +
                            str(agent.location) + ' and time ' + str(time)))
         def up():
@@ -150,3 +187,25 @@ class Sea(XYEnvironment):
                 eat()
             else:
                 l.error('execute_action:unknow action', action, 'for agent', agent, 'at time', time)
+
+    def finished(self):
+        """Print some stats"""
+        headers = []
+        histories = []
+        for agent in self.agents:
+            for objective, history in agent.objective_history.items():
+                headers.append(agent.__name__ + ':' + objective)
+                histories.append(history)
+
+        headers = CSV_SEPARATOR.join(headers)
+        res = zip(*histories)
+
+        # Save the performance history to file
+        outputPath = getOutputPath()
+        l.debug(outputPath)
+        fp = open(outputPath, 'w')
+        print(headers, file=fp)
+        print('\n'.join([CSV_SEPARATOR.join([str(x).replace('.',',') for x in line]) for line in res]), file=fp)
+        fp.close()
+
+        l.info('Output saved to:', outputPath)

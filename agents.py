@@ -208,12 +208,19 @@ class Environment:
                     self.wss.send_update_agent(thing.__name__, self.wss_cfg.agents[thing.__name__])
 
 
+    def finished(self):
+        """Override to calculate stats etc. at the end"""
+        pass
+
     def run(self, steps=1000):
         """Run the Environment for given number of time steps."""
         for i in range(steps):
             if self.is_done():
+                self.finished()
                 return
             self.step(i)
+
+        self.finished()
 
     def list_things_at(self, location, tclass=Thing):
         """Return all things exactly at a given location."""
