@@ -337,7 +337,7 @@ class XYEnvironment(Environment):
     as (0, 1), and a .holding slot, which should be a list of things
     that are held."""
 
-    # pylint: disable=too-many-instance-attributes, arguments-differ
+    # pylint: disable=too-many-instance-attributes, arguments-differ, too-many-public-methods
 
     def __init__(self, options):
         super().__init__()

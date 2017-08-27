@@ -6,9 +6,17 @@
 #
 
 from utils import argmax
+from myutils import Logging
 
-def find_in_col(val, col, l):
-    return list(filter(lambda x: x[col] == val, l))
+# Setup logging
+# =============
+
+DEBUG_MODE = False
+l = Logging('mdp', DEBUG_MODE)
+
+
+# Classes
+# =======
 
 class MDP:
     def __init__(self, init, actlist, terminals, transitions, states, rewards, gamma=.9):
@@ -23,15 +31,29 @@ class MDP:
         self.terminals = terminals
         self.transitions = transitions
 
-    # R(s, a, s') modelled with [ (s, a, s', reward) ]. '*' specifies any state/action
+    # R(s, a, s') modelled with [ (s, a, s', reward) ]. '*' specifies any state/action/statep
+    #
+    # These alternatives should be handled (in the specified order), '*' indicated any state/action:
+    #
+    #  1. 'c' '>' 'd' -> 1.0
+    #  2. '*' '*' 'd' -> 1.0
+    #  3. 'd' '*' '*' -> 1.0
+    #  4. '*' '*' '*' -> -0.04
+    #
     def R(self, state, action='*', statep='*'):
+        state = state or '*'
+        action = action or '*'
+        statep = statep or '*'
         rewards = self.rewards
-        s = state if find_in_col(state, 0, rewards) else '*'
-        a = action if find_in_col(action, 1, rewards) else '*'
-        sp = statep if find_in_col(statep, 2, rewards) else '*'
-        r = list(filter(lambda x: x[0] == s and x[1] == a and x[2] == sp, rewards))
+        r = list(filter(lambda x: x[0] == state and x[1] == action and x[2] == statep, rewards))
         if not r:
-            return None
+            r = list(filter(lambda x: x[0] == '*' and x[1] == '*' and x[2] == statep, rewards))
+        if not r:
+            r = list(filter(lambda x: x[0] == state and x[1] == '*' and x[2] == '*', rewards))
+        if not r:
+            r = list(filter(lambda x: x[0] == '*' and x[1] == '*' and x[2] == '*', rewards))
+
+        l.debug(state, action, statep, r[0][3])
         return r[0][3]
 
     def T(self, state, action):

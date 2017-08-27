@@ -6,6 +6,7 @@
 #
 
 import os
+import errno
 import datetime
 
 from agents import Thing
@@ -130,7 +131,8 @@ class Sea(XYEnvironment):
         nsactions = nsactions[0][1]
 
         for nsaction in nsactions:
-            self.show_message(('---' + agent.__name__ + ' activating ' + nsaction + ' at location ' +
+            self.show_message(('---' + agent.__name__ + ' activating ' +
+                               nsaction + ' at location ' +
                                str(agent.location) + ' and time ' + str(time) + '---'))
 
             if nsaction == 'sing':
@@ -207,7 +209,8 @@ class Sea(XYEnvironment):
         l.debug(outputPath)
         fp = open(outputPath, 'w')
         print(headers, file=fp)
-        print('\n'.join([CSV_SEPARATOR.join([str(x).replace('.',',') for x in line]) for line in res]), file=fp)
+        print('\n'.join([CSV_SEPARATOR.join([str(x).replace('.', ',')
+                                             for x in line]) for line in res]), file=fp)
         fp.close()
 
         l.info('At least one agent lived for', len(list(zip(*histories))), 'steps')
