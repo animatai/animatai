@@ -16,7 +16,7 @@ from myutils import Logging
 # Setup logging
 # =============
 
-DEBUG_MODE = True
+DEBUG_MODE = False
 l = Logging('test_mdp', DEBUG_MODE)
 
 
