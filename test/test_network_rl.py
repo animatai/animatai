@@ -106,6 +106,13 @@ REWARD_MODEL = [('*', '*', 'd', {'energy': 1.0}),
                 ('d', '*', '*', {'energy': 1.0}),
                 ('g', '*', '*', {'energy': -1.0})]
 
+# R(s, a, s')
+MULTI_DIM_REWARD_MODEL = [('*', '*', 'd', {'energy': 1.0, 'water': -1.0}),
+                          ('*', '*', 'g', {'energy': -1.0, 'water': 1.0}),
+                          ('*', '*', '*', {'energy': -0.04, 'water': -0.04}),
+                          ('d', '*', '*', {'energy': 1.0, 'water': -1.0}),
+                          ('g', '*', '*', {'energy': -1.0, 'water': 1.0})]
+
 
 # Test
 # ====
@@ -161,10 +168,18 @@ class TestNetworkRL(unittest.TestCase):
                             transitions=TRANSITION_MODEL,
                             rewards=REWARD_MODEL)
 
+        self.test_multi_dim_mdp = MDP(init='h',
+                                      actlist={'<', '>', '^', 'v'},
+                                      terminals={'d', 'g'},
+                                      states={'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k'},
+                                      transitions=TRANSITION_MODEL,
+                                      rewards=MULTI_DIM_REWARD_MODEL)
+
         sensors = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k']
         self.sensor_model = SensorModel(sensors, model=None, mdp=self.test_mdp)
 
         self.statuses = {'energy': 1.0}
+        self.multi_dim_statuses = {'energy': 1.0, 'water': 1.0}
 
         # (m1:bool,m2:bool,...,mn:bool)
         # actions and motors are the same '<','>','^','v'. It is only meaninfful to
@@ -191,13 +206,14 @@ class TestNetworkRL(unittest.TestCase):
 
         init = (False, False, False, False, False, False, False, True, False, False, False)
         self.ndp = NetworkDP(init, self.statuses, self.motor_model, .9, self.sensor_model)
+        self.multi_dim_ndp = NetworkDP(init, self.multi_dim_statuses, self.motor_model, .9, self.sensor_model)
 
 
     def tearDown(self):
         l.info('...done with test_network_rl.')
 
 
-    def test_everything(self):
+    def test_networkQLearnigAgent(self):
         # pylint: disable=line-too-long
         self.assertTrue(self.sensor_model.model ==
                         {(True, False, False, False, False, False, False, False, False, False, False): 'a',
@@ -214,9 +230,9 @@ class TestNetworkRL(unittest.TestCase):
 
         self.assertTrue(self.ndp.actlist == [(False, True), (False, False), (True, True), (True, False)])
 
-        l.debug('---- NetworkQLearningAgent ----')
         q_agent = NetworkQLearningAgent(self.ndp, Ne=5, Rplus=2,
                                         alpha=lambda n: 60./(59+n),
+                                        delta=0.5,
                                         max_iterations=100)
 
         for _ in range(200):
@@ -225,7 +241,8 @@ class TestNetworkRL(unittest.TestCase):
 
         U, pi = q_agent.Q_to_U_and_pi()['energy']
 
-        l.debug(U, pi)
+        print(U, pi)
+
         # print the utilities and the policy also
         U1 = sorted(U.items(), key=lambda x: x[0])
         pi1 = sorted(pi.items(), key=lambda x: x[0])
@@ -236,4 +253,30 @@ class TestNetworkRL(unittest.TestCase):
         self.assertTrue(U == {'h': 0.4409509735566634, 'i': 0.09125396395204298, 'j': 0.14161735265740188, 'k': -0.04, 'f': 0.27032511419674987, 'e': 0.6065623145112278, 'a': 0.7425354491107148, 'b': 0.9317155228715045, 'c': 1.0983381034734978, 'd': 1.4037956863028616, 'g': -0.04})
         self.assertTrue(pi == {'h': '^', 'i': '>', 'j': '^', 'k': None, 'f': '<', 'e': '^', 'a': '>', 'b': '>', 'c': '>', 'd': '^', 'g': None})
 
-        l.debug(self.ndp)
+        l.debug('test_networkQLearnigAgent:', self.ndp)
+
+    def test_multiDimNetworkQLearnigAgent(self):
+        # pylint: disable=line-too-long
+        q_agent = NetworkQLearningAgent(self.multi_dim_ndp, Ne=5, Rplus=2,
+                                        alpha=lambda n: 60./(59+n),
+                                        delta=0.5,
+                                        max_iterations=100)
+
+        for _ in range(400):
+            q_agent.reset()
+            run_single_trial(q_agent, self.test_multi_dim_mdp, self.sensor_model, self.motor_model)
+
+        for status in ['energy', 'water']:
+            l.debug('----- ' + status + '------')
+            U, pi = q_agent.Q_to_U_and_pi()[status]
+
+            # print the utilities and the policy also
+            U1 = sorted(U.items(), key=lambda x: x[0])
+            pi1 = sorted(pi.items(), key=lambda x: x[0])
+            print_gridU(U1)
+            print_gridPi(pi1)
+
+            #if status == 'energy':
+                # check utilities and policy
+            #    self.assertTrue(U == {'h': 0.4409509735566634, 'i': 0.09125396395204298, 'j': 0.14161735265740188, 'k': -0.04, 'f': 0.27032511419674987, 'e': 0.6065623145112278, 'a': 0.7425354491107148, 'b': 0.9317155228715045, 'c': 1.0983381034734978, 'd': 1.4037956863028616, 'g': -0.04})
+            #    self.assertTrue(pi == {'h': '^', 'i': '>', 'j': '^', 'k': None, 'f': '<', 'e': '^', 'a': '>', 'b': '>', 'c': '>', 'd': '^', 'g': None})

@@ -22,6 +22,8 @@
 # Imports
 # =======
 
+import math
+
 from collections import defaultdict
 
 from utils import argmax
@@ -215,7 +217,7 @@ class NetworkDP:
 #
 class NetworkQLearningAgent:
     # pylint: disable=too-many-instance-attributes, too-many-arguments
-    def __init__(self, ndp, Ne, Rplus, alpha=None, max_iterations=None):
+    def __init__(self, ndp, Ne, Rplus, alpha=None, delta=0.5, max_iterations=None):
 
         # Multidimensional Q: Q_status[s, a]
         self.Q = {}
@@ -236,6 +238,8 @@ class NetworkQLearningAgent:
         self.in_terminal = False
         self.iterations = 0
         self.max_iterations = max_iterations
+
+        self.delta = delta
 
         if alpha:
             self.alpha = alpha
@@ -258,7 +262,7 @@ class NetworkQLearningAgent:
     def Q_to_U_and_pi(self):
         res = {}
         for status in self.ndp.statuses:
-            U = defaultdict(lambda: -1000.) # Very Large Negative Value for Comparison see below.
+            U = defaultdict(lambda: -math.inf) # Very Large Negative Value for Comparison see below.
             pi = {}
             for state_action, value in self.Q[status].items():
                 state, action = state_action
@@ -304,27 +308,35 @@ class NetworkQLearningAgent:
     def __call__(self, percept):
         s1, r1 = self.update_state(percept)
         Q, Nsa, s, a, r = self.Q, self.Nsa, self.s, self.a, self.r
-        alpha, gamma, in_terminal = self.alpha, self.gamma, self.check_terminal()
-        actions_in_state = self.actions_in_state
+        alpha, gamma, delta, in_terminal = self.alpha, self.gamma, self.delta, self.check_terminal()
+        actions_in_state, statuses = self.actions_in_state, self.ndp.statuses
 
         if in_terminal:
-            for status in self.ndp.statuses:
-                Q[status][(s, None)] = r1[status]
+            for objective in statuses:
+                Q[objective][(s, None)] = r1[objective]
         if s is not None:
             Nsa[s, a] += 1
-            for status in self.ndp.statuses:
-                Q[status][(s, a)] += (alpha(Nsa[s, a]) *
-                                      (r[status] +
-                                       gamma * max([Q[status][(s1, a1)] for a1 in actions_in_state(s1)]) -
-                                       Q[status][(s, a)]))
+            for objective in statuses:
+                Q[objective][(s, a)] += (alpha(Nsa[s, a]) *
+                                      (r[objective] +
+                                       gamma * max([Q[objective][(s1, a1)] for a1 in actions_in_state(s1)]) -
+                                       Q[objective][(s, a)]))
 
         if in_terminal:
             self.s = self.a = self.r = None
         else:
             self.s, self.r = s1, r1
+
+            best_action = {}
+            for objective in statuses:
+                best_action[objective] = max([(statuses[objective] + delta * Q[objective][(s1, a1)], a1) for a1 in actions_in_state(s1)],
+                                             key=lambda x: x[0])
+            self.a = min(list(best_action.items()), key=lambda x: x[1][0])[1][1]
+
             # TODO: to be implemented, will use the last status now
-            for status in self.ndp.statuses:
-                self.a = argmax(actions_in_state(s1), key=lambda a1: self.f(Q[status][(s1, a1)], Nsa[s1, a1]))
+            #for objective in statuses:
+            #    self.a = argmax(actions_in_state(s1), key=lambda a1: self.f(Q[objective][(s1, a1)], Nsa[s1, a1]))
+
         self.ndp.update_statuses(r1)
         return self.a
 
