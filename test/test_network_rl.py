@@ -11,7 +11,7 @@ import random
 import unittest
 
 from mdp import MDP
-from myutils import Logging
+from myutils import Logging, get_output_dir, save_csv_file
 from network_rl import MotorModel, SensorModel, NetworkDP, NetworkQLearningAgent
 
 # Setup logging
@@ -19,6 +19,7 @@ from network_rl import MotorModel, SensorModel, NetworkDP, NetworkQLearningAgent
 
 random.seed(1)
 
+OUTPUT_DIR = get_output_dir()
 DEBUG_MODE = True
 l = Logging('test_network_rl', DEBUG_MODE)
 
@@ -208,7 +209,6 @@ class TestNetworkRL(unittest.TestCase):
         self.ndp = NetworkDP(init, self.statuses, self.motor_model, .9, self.sensor_model)
         self.multi_dim_ndp = NetworkDP(init, self.multi_dim_statuses, self.motor_model, .9, self.sensor_model)
 
-
     def tearDown(self):
         l.info('...done with test_network_rl.')
 
@@ -241,7 +241,8 @@ class TestNetworkRL(unittest.TestCase):
 
         U, pi = q_agent.Q_to_U_and_pi()['energy']
 
-        print(U, pi)
+        l.debug(U, pi)
+        save_csv_file('one_dim.csv', [self.ndp.history], self.ndp.history_headers, OUTPUT_DIR)
 
         # print the utilities and the policy also
         U1 = sorted(U.items(), key=lambda x: x[0])
@@ -250,8 +251,8 @@ class TestNetworkRL(unittest.TestCase):
         print_gridPi(pi1)
 
         # check utilities and policy
-        self.assertTrue(U == {'h': 0.4409509735566634, 'i': 0.09125396395204298, 'j': 0.14161735265740188, 'k': -0.04, 'f': 0.27032511419674987, 'e': 0.6065623145112278, 'a': 0.7425354491107148, 'b': 0.9317155228715045, 'c': 1.0983381034734978, 'd': 1.4037956863028616, 'g': -0.04})
-        self.assertTrue(pi == {'h': '^', 'i': '>', 'j': '^', 'k': None, 'f': '<', 'e': '^', 'a': '>', 'b': '>', 'c': '>', 'd': '^', 'g': None})
+        self.assertTrue(U == {'h': 0.547252095931415, 'i': 0.5002103700580103, 'j': 0.6556893053415251, 'k': 0.5949412190270509, 'e': 0.6795156047404267, 'a': 0.8312258295197614, 'b': 1.027606030238567, 'c': 1.2318945053232964, 'd': 1.4889837365412366, 'f': 0.882070599215716, 'g': -0.04})
+        self.assertTrue(pi == {'h': '^', 'i': '>', 'j': '^', 'k': '<', 'e': '^', 'a': '>', 'b': '>', 'c': '>', 'd': 'v', 'f': '^', 'g': None})
 
         l.debug('test_networkQLearnigAgent:', self.ndp)
 
@@ -275,6 +276,8 @@ class TestNetworkRL(unittest.TestCase):
             pi1 = sorted(pi.items(), key=lambda x: x[0])
             print_gridU(U1)
             print_gridPi(pi1)
+
+        save_csv_file('two_dim.csv', [self.multi_dim_ndp.history], self.ndp.history_headers, OUTPUT_DIR)
 
             #if status == 'energy':
                 # check utilities and policy

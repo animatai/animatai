@@ -5,10 +5,6 @@
 # Copyright (C) 2017  Jonas Colmsjö, Claes Strannegård
 #
 
-import os
-import errno
-import datetime
-
 from agents import Thing
 from agents import Obstacle
 from agents import Direction
@@ -17,29 +13,14 @@ from agents import XYEnvironment
 
 from myutils import DotDict
 from myutils import Logging
-
+from myutils import get_output_dir, save_csv_file
 
 # Setup constants and logging
 # ===========================
 
-CSV_SEPARATOR = ';'
 DEBUG_MODE = True
 l = Logging('sea', DEBUG_MODE)
 
-
-# Functions
-# ========
-
-def getOutputPath():
-    try:
-        currentDir = os.path.dirname(os.path.abspath(__file__)) + '/..'
-        outputDir = currentDir + os.path.join('/output', datetime.datetime.now().isoformat())
-        os.makedirs(outputDir)
-        return os.path.join(outputDir, "history.csv")
-
-    except OSError as exception:
-        if exception.errno != errno.EEXIST:
-            raise
 
 # Classes
 # ========
@@ -201,17 +182,6 @@ class Sea(XYEnvironment):
                 headers.append(agent.__name__ + ':' + objective)
                 histories.append(history)
 
-        headers = CSV_SEPARATOR.join(headers)
-        res = zip(*histories)
-
         # Save the performance history to file
-        outputPath = getOutputPath()
-        l.debug(outputPath)
-        fp = open(outputPath, 'w')
-        print(headers, file=fp)
-        print('\n'.join([CSV_SEPARATOR.join([str(x).replace('.', ',')
-                                             for x in line]) for line in res]), file=fp)
-        fp.close()
-
+        save_csv_file('history.csv', histories, headers)
         l.info('At least one agent lived for', len(list(zip(*histories))), 'steps')
-        l.info('Output saved to:', outputPath)

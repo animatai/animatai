@@ -109,7 +109,7 @@ OPTIONS = DotDict({
     'terrain': terrain.split('\n'),
     'things': things.split('\n'),
     'exogenous_things': exogenous_things.split('\n'),
-    'exogenous_things_prob': 0.01,
+    'exogenous_things_prob': 0.001,
     'objectives': {'energy': 1},
     'rewards':{
         'eat_and_forward': {

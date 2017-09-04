@@ -160,6 +160,9 @@ class NetworkDP:
 
         self.actlist = self.actions_from_motors()
 
+        self.history = []
+        self.history_headers = [str((list(statuses.keys()), 'state', 'action', list(statuses.keys())))]
+
     def __repr__(self):
         return ('gamma=' + str(self.gamma) + '\n' +
                 'init=' + str(self.init) +
@@ -174,7 +177,13 @@ class NetworkDP:
                 str([self.motor_model(act) for act in self.actlist]) + '\n' +
                 'in_terminal=' + str(self.in_terminal()))
 
-    def update_statuses(self, rewards):
+    def update_statuses(self, state, action, rewards):
+        if self.motor_model:
+            action = self.motor_model(action)
+        if self.sensor_model:
+            state = self.sensor_model(state)
+        self.history.append((list(self.statuses.values()), state, action, list(rewards.values())))
+
         for k, v in rewards.items():
             self.statuses[k] += v
 
@@ -227,6 +236,7 @@ class NetworkQLearningAgent:
         self.Ne = Ne                      # iteration limit in exploration function
         self.Nsa = defaultdict(float)
         self.ndp = ndp
+        self.delta = delta
         self.Rplus = Rplus                # large value to assign before iteration limit
         self.gamma = ndp.gamma
         self.all_act = ndp.actlist
@@ -239,7 +249,6 @@ class NetworkQLearningAgent:
         self.iterations = 0
         self.max_iterations = max_iterations
 
-        self.delta = delta
 
         if alpha:
             self.alpha = alpha
@@ -329,15 +338,14 @@ class NetworkQLearningAgent:
 
             best_action = {}
             for objective in statuses:
-                best_action[objective] = max([(statuses[objective] + delta * Q[objective][(s1, a1)], a1) for a1 in actions_in_state(s1)],
+                best_action[objective] = max([(self.f(statuses[objective] + delta * Q[objective][(s1, a1)], Nsa[s1, a1]), a1) for a1 in actions_in_state(s1)],
                                              key=lambda x: x[0])
             self.a = min(list(best_action.items()), key=lambda x: x[1][0])[1][1]
 
-            # TODO: to be implemented, will use the last status now
-            #for objective in statuses:
+            # original version
             #    self.a = argmax(actions_in_state(s1), key=lambda a1: self.f(Q[objective][(s1, a1)], Nsa[s1, a1]))
 
-        self.ndp.update_statuses(r1)
+            self.ndp.update_statuses(self.s, self.a, self.r)
         return self.a
 
     # To be overridden in most cases. The default case assumes the percept
