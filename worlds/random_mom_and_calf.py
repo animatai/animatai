@@ -104,7 +104,7 @@ mom_start_pos = (0, 1)
 calf_start_pos = (0, 4)
 
 # `motors` can perform several `actions`. The Sea Environment has four available
-# `actions`: `eat`, `down`, `up`, `forward`. Thre is also one `nsaction` which is `sing`
+# `actions`: `eat`, `down`, `up`, `forward`. There is also one `nsaction` which is `sing`
 # `sensors` are boolean variables indicating percepts (`Things` of different kinds)
 # that are perceived. Active `sensors` are sent as input to the `program`
 OPTIONS = DotDict({

@@ -70,9 +70,8 @@ def mdp_to_simple_sensor_model(mdp):
         model[tuple(sensor)] = state
     return model
 
-# `model` maps sensor tuples to states (for readability)
 # sensors = [('sensor name', Thing to recognise)]
-# __eq__ is used to compare objects to look for
+# model   = {(s1:bool,...,sn:bool): 'state'} maps sensor tuples to states (for readability)
 class SensorModel:
     # pylint: disable=too-few-public-methods
     def __init__(self, sensors, model=None, mdp=None):
@@ -100,18 +99,6 @@ class SensorModel:
                 return k
         raise Exception('SensorModel.sensors: state not found - ' + state)
 
-    # TODO: Work in progress!!
-    def percepts_to_sensors(self, agent, percepts_, ns_percept):
-        # pylint: disable=cell-var-from-loop
-        res = []
-        for p in percepts_:
-            sensors = list(filter(lambda x: isinstance(p[0] if ns_percept else p, x[0]),
-                                  self.options.agents[agent.__name__]['sensors']))
-            sensors = list(map(lambda x: x[1], sensors))
-            if sensors:
-                res += sensors
-
-        return res
 
 #
 # MotorModel
@@ -156,10 +143,8 @@ class MotorModel:
 # and statuses. The SensorModel and MotorModel classes are used to manage the
 # sensors and motors (data structure classes).
 #
-# init         = (s1_init, ..., sn_init)
-# motors       = [m1_name, ..., mn_name]
+# init         = (s1_init, ..., sn_init) - initial state of sensors
 # statuses     = {name1: init_value,..., name_n: init_value}
-# sensors      = [s1_name, ..., sn_name]
 # motor_model  = {(m1:bool,m2:bool,...,mn:bool): 'action name', '*': 'default_action'}
 # sensor_model = {(s1:bool, s2:bool, ..., sn:bool): 'state name' } (Optional)
 #
@@ -304,7 +289,7 @@ class NetworkAgent(Agent):
         self.history.append((list(statuses.values()), s, a, list(r.values())))
 
         # save status history
-        for status in statuses:
+        for status in self.ndp.statuses:
             self.status_history[status].append(r[status])
 
         self.ndp.update_statuses(s, a, r)
@@ -315,7 +300,7 @@ class NetworkAgent(Agent):
         i, res = self.iterations, False
         if i < 2:
             return False
-        for status in statuses:
+        for status in self.ndp.statuses:
             res = res or self.status_history[status][i] > self.status_history[status][i-1]
         return res
 

@@ -44,46 +44,6 @@ class Sea(XYEnvironment):
         self.save_history_for = [Squid]
         super().__init__(options)
 
-    def percepts_to_sensors(self, agent, percepts_, ns_percept):
-        # pylint: disable=cell-var-from-loop
-        res = []
-        for p in percepts_:
-            sensors = list(filter(lambda x: isinstance(p[0] if ns_percept else p, x[0]),
-                                  self.options.agents[agent.__name__]['sensors']))
-            sensors = list(map(lambda x: x[1], sensors))
-            if sensors:
-                res += sensors
-
-        return res
-
-    def percept(self, agent):
-        things = self.things_near(agent.location)
-        return self.percepts_to_sensors(agent, things, True)
-
-    def ns_percept(self, agent, time):
-        ns_artifacts = self.list_ns_artifacts_at(time)
-        return self.percepts_to_sensors(agent, ns_artifacts, False)
-
-    # TODO: Move to superclass
-    def save_history(self, agent):
-        # Save history for agents
-        if not hasattr(agent, 'objective_history'):
-            agent.objective_history = {}
-            for objective in agent.objectives:
-                agent.objective_history[objective] = []
-
-        for objective in agent.objectives:
-            agent.objective_history[objective].append(agent.objectives[objective])
-
-        # Save history for environment
-        if not hasattr(self, 'environment_history'):
-            self.environment_history = {}
-            for cls in self.save_history_for:
-                self.environment_history[cls] = []
-
-        for cls in self.save_history_for:
-            self.environment_history[cls].append(len(self.list_things(cls)))
-
     # to be used after the __call__ function
     def any_measurement_decreased(self):
         any_obj = list(self.environment_history)[0]
@@ -104,6 +64,11 @@ class Sea(XYEnvironment):
     #            Squid: { 'energy': 0.1 },
     #            None: { 'energy': -0.05 }
     #        },
+    #
+    # TODO: Working - Change to: state, action, state1, reward
+    # ((s1:bool,...,sn:bool), (m1:bool,...,mn:bool), (s1:bool,...,sn:bool), reward:float)
+    # Using the SensorModel and MotorModel to give names to states and actions
+    # ('state', 'action', 'future state', reward)
     def calc_performance(self, agent, action):
         reward = {}
         # pylint: disable=len-as-condition
@@ -205,20 +170,3 @@ class Sea(XYEnvironment):
                 eat()
             else:
                 l.error('execute_action:unknow action', action, 'for agent', agent, 'at time', time)
-
-    def finished(self):
-        """Print some stats"""
-        headers = []
-        histories = []
-        for agent in self.agents:
-            for objective, history in agent.objective_history.items():
-                headers.append(agent.__name__ + ':' + objective)
-                histories.append(history)
-
-        for cls, history in self.environment_history.items():
-            headers.append(str(cls))
-            histories.append(history)
-
-        # Save the performance history to file
-        save_csv_file('history.csv', histories, headers)
-        l.info('At least one agent lived for', len(list(zip(*histories))), 'steps')

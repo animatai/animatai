@@ -178,7 +178,9 @@ class TestNetworkRL(unittest.TestCase):
                                       transitions=TRANSITION_MODEL,
                                       rewards=MULTI_DIM_REWARD_MODEL)
 
-        sensors = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k']
+        sensors = [('a', None), ('b', None), ('c', None), ('d', None), ('e', None),
+                   ('f', None), ('g', None), ('h', None), ('i', None), ('j', None),
+                   ('k', None)]
         self.sensor_model = SensorModel(sensors, model=None, mdp=self.test_mdp)
 
         self.statuses = {'energy': 1.0}

@@ -136,6 +136,7 @@ def trace_agent(agent):
 # Each thing has a .location slot, even though some environments may not
 # need this.
 class Environment:
+    # pylint: disable=too-many-instance-attributes
     def __init__(self):
         self.things = []
         self.agents = []
@@ -155,11 +156,7 @@ class Environment:
         return []  # List of classes that can go into environment
 
         # Return the percept that the agent sees at this point. (Implement this)
-    def percept(self, agent):
-        raise NotImplementedError
-
-    # Return the percept that the agent sees at this point. (Implement this)
-    def ns_percept(self, agent, time):
+    def percept(self, agent, time):
         raise NotImplementedError
 
     # Change the world to reflect this action. (Implement this)
@@ -168,7 +165,8 @@ class Environment:
 
     # Return the reward for `agent` taking `action`. ALways return 1 for testing
     # purposes, Implement this.
-    def calc_performance(self, agent, action):
+    # _ = agent, _2 = action
+    def calc_performance(self, _, _2):
         return 1
 
     # Default location to place a new thing with unspecified location
@@ -374,6 +372,7 @@ class XYEnvironment(Environment):
         self.height = options.height or 10
         self.observers = []
         self.thing_counter = 0
+        self.environment_history = {}
 
         # Needs to be set in the subclass when used
         if not hasattr(self, 'ENV_ENCODING'):
@@ -391,6 +390,10 @@ class XYEnvironment(Environment):
         # build world from things and terrain
         if options.things:
             self.add_things(options.things)
+
+        if options.save_history_for:
+            for cls in options.save_history_for:
+                self.environment_history[cls] = []
 
         # setup rendering in browser if options are there
         if options.wss:
@@ -562,6 +565,29 @@ class XYEnvironment(Environment):
         # Updates iteration start and end (with walls).
         self.x_start, self.y_start = (1, 1)
         self.x_end, self.y_end = (self.width - 1, self.height - 1)
+
+    # Save history for environment
+    def save_history(self):
+        for cls in self.options.save_history_for:
+            self.environment_history[cls].append(len(self.list_things(cls)))
+
+    # Save some stats
+    def finished(self):
+        headers = []
+        histories = []
+        for agent in self.agents:
+            if agent.status_history:
+                for objective, history in agent.status_history.items():
+                    headers.append(agent.__name__ + ':' + objective)
+                    histories.append(history)
+
+        for cls, history in self.environment_history.items():
+            headers.append(str(cls))
+            histories.append(history)
+
+        # Save the performance history to file
+        save_csv_file('history.csv', histories, headers)
+        l.info('At least one agent lived for', len(list(zip(*histories))), 'steps')
 
     # Adds an observer to the list of observers.
     # An observer is typically an EnvGUI.
