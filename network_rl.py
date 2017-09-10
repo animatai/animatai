@@ -23,10 +23,9 @@
 # =======
 
 import math
-
 from collections import defaultdict
 
-from utils import argmax
+from agents import Agent
 from myutils import Logging
 
 
@@ -71,6 +70,9 @@ def mdp_to_simple_sensor_model(mdp):
         model[tuple(sensor)] = state
     return model
 
+# `model` maps sensor tuples to states (for readability)
+# sensors = [('sensor name', Thing to recognise)]
+# __eq__ is used to compare objects to look for
 class SensorModel:
     # pylint: disable=too-few-public-methods
     def __init__(self, sensors, model=None, mdp=None):
@@ -97,6 +99,19 @@ class SensorModel:
             if v == state:
                 return k
         raise Exception('SensorModel.sensors: state not found - ' + state)
+
+    # TODO: Work in progress!!
+    def percepts_to_sensors(self, agent, percepts_, ns_percept):
+        # pylint: disable=cell-var-from-loop
+        res = []
+        for p in percepts_:
+            sensors = list(filter(lambda x: isinstance(p[0] if ns_percept else p, x[0]),
+                                  self.options.agents[agent.__name__]['sensors']))
+            sensors = list(map(lambda x: x[1], sensors))
+            if sensors:
+                res += sensors
+
+        return res
 
 #
 # MotorModel
@@ -149,19 +164,20 @@ class MotorModel:
 # sensor_model = {(s1:bool, s2:bool, ..., sn:bool): 'state name' } (Optional)
 #
 class NetworkDP:
-    # pylint: disable=too-many-arguments
+    # pylint: disable=too-many-arguments, too-many-instance-attributes
     def __init__(self, init, statuses, motor_model, gamma=.9, sensor_model=None):
         self.init = init
         self.gamma = gamma
         self.statuses = statuses
-        self.init_statuses = dict(statuses)
         self.motor_model = motor_model
         self.sensor_model = sensor_model
+        self.init_statuses = dict(statuses)
 
         self.actlist = self.actions_from_motors()
 
         self.history = []
-        self.history_headers = [str((list(statuses.keys()), 'state', 'action', list(statuses.keys())))]
+        self.history_headers = [str(list(statuses.keys())), 'state', 'action',
+                                str(list(statuses.keys()))]
 
     def __repr__(self):
         return ('gamma=' + str(self.gamma) + '\n' +
@@ -217,6 +233,112 @@ class NetworkDP:
 
         return list(map(tuple, actions_(self.motor_model.motors)))
 
+# Keeps track of the history of actions performed
+class NetworkAgent(Agent):
+    # pylint: disable=too-many-instance-attributes
+    def __init__(self, program=None, name='nonname', ndp=None, max_iterations=None):
+
+        self.program = program or self
+
+        self.ndp = ndp
+        self.all_act = ndp.actlist
+
+        # (s)tate, (p)revious (s), (a)ction, (p)revious (a), (r)eward, (p)revious (r)
+        self.s = self.ps = None
+        self.a = self.pa = None
+        self.r = self.pr = {}
+
+        self.iterations = 0
+        self.in_terminal = False
+        self.max_iterations = max_iterations
+
+        # history of statuses, state, action, reward
+        self.history = []
+        self.history_headers = [str(list(ndp.statuses.keys())), 'state', 'action',
+                                str(list(ndp.statuses.keys()))]
+
+        # history of statuses only
+        self.status_history = {}
+        for status in ndp.statuses:
+            self.status_history[status] = []
+
+        super().__init__(name, self.program)
+
+    def __repr__(self):
+        return ('statuses:' + str(self.ndp.statuses) +
+                ',iterations:' + str(self.iterations) +
+                ',in_terminal:' + str(self.in_terminal))
+
+    def reset(self):
+        self.iterations = 0
+        self.in_terminal = False
+        self.ndp.reset()
+
+    # keep count of the number of iterations and check if the limit is reached
+    def check_iterations(self):
+        self.iterations += 1
+        return self.max_iterations and self.iterations >= self.max_iterations
+
+    # Check if status is zero or less and keep track of number of
+    # iterations and stop after some limit has been reached
+    # The iterations counter is increased so the function should be called once
+    def check_terminal(self):
+        self.alive = not (self.ndp.in_terminal() or self.check_iterations())
+        return not self.alive
+
+    def actions_in_state(self, state):
+        # pylint: disable=unused-argument
+        return self.all_act
+
+    # update the status after the action has been perfomred and the new state reached
+    def update_statuses(self):
+        s, a, r = self.s, self.a, self.r
+        motor_model, sensor_model, statuses = (self.ndp.motor_model, self.ndp.sensor_model,
+                                               self.ndp.statuses)
+
+        # save history for statuses, state, action, reward
+        if motor_model:
+            a = motor_model(a)
+        if sensor_model:
+            s = sensor_model(s)
+        self.history.append((list(statuses.values()), s, a, list(r.values())))
+
+        # save status history
+        for status in statuses:
+            self.status_history[status].append(r[status])
+
+        self.ndp.update_statuses(s, a, r)
+        self.ps, self.pa, self.pr = s, a, dict(r)
+
+    # to be used after the __call__ function
+    def any_status_increased(self):
+        i, res = self.iterations, False
+        if i < 2:
+            return False
+        for status in statuses:
+            res = res or self.status_history[status][i] > self.status_history[status][i-1]
+        return res
+
+
+    # To be overridden when not supplying the program in the constructor.
+    # Environment expects a program function with the type:
+    # action = program(percept=([string|Thing|NSArtifact], reward for previous actopn))
+    def __call__(self, percept):
+        a1 = None
+        s1, r = self.update_state(percept)
+        if self.program:
+            a1 = self.program(percept)
+
+        self.s, self.a, self.r = s1, a1, r
+        self.update_statuses()
+        return a1
+
+    # To be overridden in most cases. The default case assumes the percept
+    # to be of type (state, reward)
+    def update_state(self, percept):
+        # pylint: disable=no-self-use
+        return percept
+
 
 #
 # NetworkQLearningAgent
@@ -224,9 +346,9 @@ class NetworkDP:
 #
 # Implements multi-dimensional Q-learning using the NetworkDP class instead of a MDP.
 #
-class NetworkQLearningAgent:
+class NetworkQLearningAgent(NetworkAgent):
     # pylint: disable=too-many-instance-attributes, too-many-arguments
-    def __init__(self, ndp, Ne, Rplus, alpha=None, delta=0.5, max_iterations=None):
+    def __init__(self, ndp, Ne, Rplus, alpha=None, delta=0.5, max_iterations=None, name='noname'):
 
         # Multidimensional Q: Q_status[s, a]
         self.Q = {}
@@ -235,25 +357,16 @@ class NetworkQLearningAgent:
 
         self.Ne = Ne                      # iteration limit in exploration function
         self.Nsa = defaultdict(float)
-        self.ndp = ndp
         self.delta = delta
         self.Rplus = Rplus                # large value to assign before iteration limit
         self.gamma = ndp.gamma
-        self.all_act = ndp.actlist
-
-        self.s = None
-        self.a = None
-        self.r = None
-
-        self.in_terminal = False
-        self.iterations = 0
-        self.max_iterations = max_iterations
-
 
         if alpha:
             self.alpha = alpha
         else:
             self.alpha = lambda n: 1./(1+n)  # udacity video
+
+        super().__init__(None, name, ndp, max_iterations)
 
     def __repr__(self):
         res = ''
@@ -284,16 +397,6 @@ class NetworkQLearningAgent:
             res[status] = U, pi
         return res
 
-    def reset(self):
-        self.iterations = 0
-        self.in_terminal = False
-        self.ndp.reset()
-
-    # keep count of the number of iterations and check if the limit is reached
-    def check_iterations(self):
-        self.iterations += 1
-        return self.max_iterations and self.iterations >= self.max_iterations
-
     # check if status is zero or less and keep track of number of
     # iterations and stop after some limit has been reached
     def check_terminal(self):
@@ -307,52 +410,48 @@ class NetworkQLearningAgent:
             return self.Rplus
         return u
 
-    def actions_in_state(self, state):
-        # pylint: disable=unused-argument
-        return self.all_act
-
     def visited_states(self):
         return sorted(set(map(lambda x: x[0], list(self.Q))))
 
     def __call__(self, percept):
-        s1, r1 = self.update_state(percept)
-        Q, Nsa, s, a, r = self.Q, self.Nsa, self.s, self.a, self.r
+        # pylint: disable=too-many-locals
+        s1, r = self.update_state(percept)
+        Q, Nsa, s, a = self.Q, self.Nsa, self.s, self.a
         alpha, gamma, delta, in_terminal = self.alpha, self.gamma, self.delta, self.check_terminal()
         actions_in_state, statuses = self.actions_in_state, self.ndp.statuses
 
         if in_terminal:
             for objective in statuses:
-                Q[objective][(s, None)] = r1[objective]
+                Q[objective][(s, None)] = r[objective]
         if s is not None:
             Nsa[s, a] += 1
             for objective in statuses:
                 Q[objective][(s, a)] += (alpha(Nsa[s, a]) *
-                                      (r[objective] +
-                                       gamma * max([Q[objective][(s1, a1)] for a1 in actions_in_state(s1)]) -
-                                       Q[objective][(s, a)]))
+                                         (r[objective] +
+                                          gamma * max([Q[objective][(s1, a1)]
+                                                       for a1 in actions_in_state(s1)]) -
+                                          Q[objective][(s, a)]))
 
         if in_terminal:
             self.s = self.a = self.r = None
         else:
-            self.s, self.r = s1, r1
+            self.s, self.r = s1, r
 
             best_action = {}
             for objective in statuses:
-                best_action[objective] = max([(self.f(statuses[objective] + delta * Q[objective][(s1, a1)], Nsa[s1, a1]), a1) for a1 in actions_in_state(s1)],
+                best_action[objective] = max([(self.f(statuses[objective] +
+                                                      delta * Q[objective][(s1, a1)],
+                                                      Nsa[s1, a1]), a1)
+                                              for a1 in actions_in_state(s1)],
                                              key=lambda x: x[0])
             self.a = min(list(best_action.items()), key=lambda x: x[1][0])[1][1]
 
             # original version
-            #    self.a = argmax(actions_in_state(s1), key=lambda a1: self.f(Q[objective][(s1, a1)], Nsa[s1, a1]))
+            # self.a = argmax(actions_in_state(s1),
+            #                 key=lambda a1: self.f(Q[objective][(s1, a1)], Nsa[s1, a1]))
 
             self.ndp.update_statuses(self.s, self.a, self.r)
         return self.a
-
-    # To be overridden in most cases. The default case assumes the percept
-    # to be of type (state, reward)
-    def update_state(self, percept):
-        # pylint: disable=no-self-use
-        return percept
 
 
 #

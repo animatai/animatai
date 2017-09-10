@@ -9,11 +9,7 @@
 
 import unittest
 
-from agents import Agent
-from agents import Thing
-from agents import Direction
-from agents import XYEnvironment
-
+from agents import Agent, Thing, Direction, XYEnvironment, Action, NsAction
 from myutils import Logging
 
 # Setup logging
@@ -108,6 +104,47 @@ class TestAgents(unittest.TestCase):
         e.execute_action(a, 'Forward', 1)
         self.assertTrue(a.location == (1, 0))
 
+    def test_ns_action(self):
+        l.info('test_ns_action')
+
+        e = XYEnvironment({})
+        a = Agent(None, 'cachelot')
+        e.add_thing(a, (1, 1))
+
+        # song at time=1 will be heard by other agents at time=2
+        e.execute_action(a, NsAction('sing'), 1)
+        self.assertTrue(len(e.list_ns_artifacts_at(2)) == 1)
+
+    def test_step(self):
+        l.info('test_step')
+
+        def program1(percept):
+            self.assertTrue(percept != [])
+            return Action('do nothing')
+
+        def program2(percept):
+            self.assertTrue(percept != [])
+            return NsAction('say nothing')
+
+        e = XYEnvironment({})
+        a1 = Agent(program1, 'agent1')
+        a2 = Agent(program2, 'agent2')
+        t = Thing()
+
+        e.add_thing(a1, (1, 1))
+        e.add_thing(a2, (1, 1))
+        self.assertTrue(e.agents != [])
+
+        e.add_thing(t, (1, 1))
+
+        e.step(1)
+        l.debug(e.actions, e.rewards)
+        self.assertTrue(len(e.actions) == 2)
+        self.assertTrue(e.rewards == [0, 0])
+
+        e.step(2)
+        self.assertTrue(len(e.actions) == 2)
+        self.assertTrue(e.rewards == [1, 1])
 
     def tearDown(self):
         l.info('...done with test_agents.')

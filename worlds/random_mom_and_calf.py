@@ -8,6 +8,8 @@
 import random
 
 from agents import Agent
+from network_rl import BasicAgent
+
 from myutils import DotDict
 from myutils import Logging
 
@@ -82,19 +84,19 @@ terrain = ('WWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWWW\n' +
 # the mother and calf have separate and identical lanes
 things = ('XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\n' +
           '                                                  \n' +
-          '     ss                            ss             \n' +
+          '                                                  \n' +
           'XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX\n' +
           '                                                  \n' +
-          '     ss                            ss             \n' +
+          '                                                  \n' +
           'XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX')
 
 # the mother and calf have separate and identical lanes
 exogenous_things = ('                                                  \n' +
                     '                                                  \n' +
-                    '     ss                            ss             \n' +
+                    '                                   ss             \n' +
                     '                                                  \n' +
                     '                                                  \n' +
-                    '     ss                            ss             \n' +
+                    '                                   ss             \n' +
                     '                                                  ')
 
 
@@ -109,9 +111,9 @@ OPTIONS = DotDict({
     'terrain': terrain.split('\n'),
     'things': things.split('\n'),
     'exogenous_things': exogenous_things.split('\n'),
-    'exogenous_things_prob': 0.001,
+    'exogenous_things_prob': 0.01,
     'objectives': {'energy': 1},
-    'rewards':{
+    'reward':{
         'eat_and_forward': {
             Squid: {
                 'energy': 0.1

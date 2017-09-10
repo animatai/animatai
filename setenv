@@ -1,0 +1,4 @@
+# Make it possible to run single unit tests like this: `python -m unittest test_agents`
+# Make sure that the virtualenv has been activated before running this
+
+export PYTHONPATH=test

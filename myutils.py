@@ -68,9 +68,9 @@ def save_csv_file(filename, histories, headers=None, output_dir=None, csv_sep=';
     if not output_dir:
         output_dir = get_output_dir()
     output_path = os.path.join(output_dir, filename)
-    fp = open(output_path, 'w')
+    filep = open(output_path, 'w')
     if headers:
-        print(headers, file=fp)
+        print(headers, file=filep)
     print('\n'.join([csv_sep.join([str(x).replace('.', ',')
-                                         for x in line]) for line in res]), file=fp)
-    fp.close()
+                                   for x in line]) for line in res]), file=filep)
+    filep.close()
