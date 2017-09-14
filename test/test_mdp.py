@@ -10,7 +10,7 @@
 import unittest
 
 from mdp import MDP, value_iteration, value_iteration2, best_policy
-from myutils import Logging
+from gzutils.gzutils import Logging
 
 
 # Setup logging

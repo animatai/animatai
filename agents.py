@@ -10,7 +10,7 @@ import random
 
 from utils import turn_heading
 from utils import distance_squared
-from myutils import Logging
+from gzutils.gzutils import Logging
 from myutils import DotDict
 
 

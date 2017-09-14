@@ -7,7 +7,7 @@ source venv3/bin/activate
 rm -rf docs
 
 # run lint to check code
-pylint *.py worlds/*.py test/*.py
+pylint *.py test/*.py
 
 # Genrate docs
 #pydoc -w *.py

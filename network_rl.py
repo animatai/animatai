@@ -26,7 +26,7 @@ import math
 from collections import defaultdict
 
 from agents import Agent
-from myutils import Logging
+from gzutils.gzutils import Logging
 
 
 # Setup logging

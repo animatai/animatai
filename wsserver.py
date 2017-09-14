@@ -14,7 +14,7 @@ import websockets
 
 import config
 
-from myutils import Logging
+from gzutils.gzutils import Logging
 from myutils import writef
 
 

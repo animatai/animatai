@@ -4,7 +4,7 @@
 # Imports
 # =======
 
-from myutils import Logging
+from gzutils.gzutils import Logging
 
 
 # Setup logging

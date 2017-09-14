@@ -10,7 +10,7 @@
 import unittest
 
 from agents import Agent, Thing, Direction, XYEnvironment, Action, NsAction
-from myutils import Logging
+from gzutils.gzutils import Logging
 
 # Setup logging
 # =============

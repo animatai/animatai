@@ -10,7 +10,7 @@
 import random
 import unittest
 
-from myutils import Logging
+from gzutils.gzutils import Logging
 from network import Network
 
 # Setup logging

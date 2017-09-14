@@ -11,7 +11,7 @@ import random
 import unittest
 
 from mdp import MDP
-from myutils import Logging, get_output_dir, save_csv_file
+from gzutils.gzutils import Logging, get_output_dir, save_csv_file
 from network_rl import MotorModel, SensorModel, NetworkDP, NetworkQLearningAgent
 
 # Setup logging
