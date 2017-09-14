@@ -14,13 +14,12 @@ SERVER_ADDRESS = 'localhost'
 SERVER_PORT = 5678
 
 #
-# Add the import for the python file for the world here. Place the python code
-# in the world folder
+# Import the exmaples, these are found here: https://github.com/animatai/examples
 #
 
-import examples.blind_dog
-import examples.random_agents
-import examples.random_mom_and_calf
+import blind_dog
+import random_agents
+import random_mom_and_calf
 
 #
 # Add a elif statement for each world like this:
@@ -31,13 +30,13 @@ import examples.random_mom_and_calf
 
 def handler(wss_, world, steps, seed):
     if world == 'random_agents':
-        worlds.random_agents.run(wss_, steps)
+        random_agents.run(wss_, steps)
 
     elif world == 'blind_dog':
-        worlds.blind_dog.run(wss_, steps)
+        blind_dog.run(wss_, steps)
 
     elif world == 'random_mom_and_calf':
-        worlds.random_mom_and_calf.run(wss_, steps, seed)
+        random_mom_and_calf.run(wss_, steps, seed)
 
     #elif message == 'animat':
     #    (outputPath, outputDir) = animats.main.getOutputPath()

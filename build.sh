@@ -14,7 +14,9 @@ pylint ecosystem/*.py test/*.py
 pycco *.py
 
 # Run the unit tests
+export PYTHONPATH=test
 python -m unittest discover test
 
 # build package for distribution
+rm -rf dist/
 python setup.py sdist
