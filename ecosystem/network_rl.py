@@ -23,10 +23,11 @@
 # =======
 
 import math
-from collections import defaultdict
 
-from agents import Agent
+from collections import defaultdict
 from gzutils.gzutils import Logging
+
+from .agents import Agent
 
 
 # Setup logging

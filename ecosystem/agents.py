@@ -8,10 +8,9 @@
 
 import random
 
-from utils import turn_heading
-from utils import distance_squared
-from gzutils.gzutils import Logging
-from myutils import DotDict
+from gzutils.gzutils import DotDict, Logging, save_csv_file
+
+from .utils import turn_heading, distance_squared
 
 
 # Setup constants and logging

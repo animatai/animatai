@@ -1,0 +1,6 @@
+# Make it possible to run single unit tests like this: `python -m unittest test_agents`
+# Also used to make it possible to run examples in other repos/-folders from here.
+# Make sure that the virtualenv has been activated before running this
+
+# change `../examples` to the path actually used
+export PYTHONPATH=test:../examples

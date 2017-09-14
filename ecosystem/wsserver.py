@@ -15,7 +15,7 @@ import websockets
 import config
 
 from gzutils.gzutils import Logging
-from myutils import writef
+from gzutils.gzutils import writef
 
 
 # Constants and functions

@@ -8,9 +8,8 @@
 # ======
 
 import unittest
-
-from agents import Agent, Thing, Direction, XYEnvironment, Action, NsAction
 from gzutils.gzutils import Logging
+from ecosystem.agents import Agent, Thing, Direction, XYEnvironment, Action, NsAction
 
 # Setup logging
 # =============

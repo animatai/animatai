@@ -1,4 +1,4 @@
-# pylint: disable=missing-docstring, global-statement, invalid-name
+# pylint: disable=missing-docstring, global-statement, invalid-name, too-few-public-methods
 #
 # Copyright (C) 2017  Jonas Colmsjö, Claes Strannegård
 #
@@ -7,11 +7,10 @@
 # Imports
 # ======
 
-import random
 import unittest
-
 from gzutils.gzutils import Logging
-from network import Network
+from ecosystem.network import Network
+
 
 # Setup logging
 # =============
@@ -56,7 +55,7 @@ class TestNetwork(unittest.TestCase):
         network.update([Thing2(), Thing1()])
         self.assertTrue(network.get() == (True, True, ))
 
-        network.add_AND_node([0,1])
+        network.add_AND_node([0, 1])
         network.update([Thing2(), Thing1()])
         self.assertTrue(network.get() == (True, True, True))
 
@@ -67,7 +66,7 @@ class TestNetwork(unittest.TestCase):
         network = Network([('thing1', Thing1), ('thing2', Thing2)])
         #network.add_SENSOR_node(Thing1)
         #network.add_SENSOR_node(Thing2)
-        network.add_SEQ_node(0,1)
+        network.add_SEQ_node(0, 1)
 
         network.update([Thing1()])
         self.assertTrue(network.get() == (True, False, False))

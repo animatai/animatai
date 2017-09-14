@@ -8,9 +8,8 @@
 # ======
 
 import unittest
-
-from mdp import MDP, value_iteration, value_iteration2, best_policy
 from gzutils.gzutils import Logging
+from ecosystem.mdp import MDP, value_iteration, value_iteration2, best_policy
 
 
 # Setup logging

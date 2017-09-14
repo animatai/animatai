@@ -8,7 +8,8 @@ Claes Strannegård, Nils Svangård, Jonas Colmsjö, David Lindström, Joscha Bac
 
 Submitted to IJCAI-17 AGA workshop, Melbourne, Australia
 
-This `dev` branch is work in progress and will contain a completely refactored version of the original code. 
+This `dev` branch is work in progress and will contain a completely refactored
+version of the original code.
 
 
 Setup
@@ -38,6 +39,11 @@ Use [Google Style Guide](https://google.github.io/styleguide/pyguide.html)
 and make sure that the unit tests are maintained.
 
 Build (lint and run unit tests) with: `./build.sh`
+
+Create a source distribution: `python setup.py sdist`
+
+Upload the build to the public package repo for installation with `pip`:
+`twine upload dist/animats-X.Y.Z.tar.gz`
 
 
 Credits

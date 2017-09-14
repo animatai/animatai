@@ -5,8 +5,9 @@
 # Copyright (C) 2017  Jonas Colmsjö, Claes Strannegård
 #
 
-from utils import argmax
 from gzutils.gzutils import Logging
+
+from .utils import argmax
 
 # Setup logging
 # =============
