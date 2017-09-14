@@ -15,3 +15,6 @@ pycco *.py
 
 # Run the unit tests
 python -m unittest discover test
+
+# build package for distribution
+python setup.py sdist

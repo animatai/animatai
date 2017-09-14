@@ -11,7 +11,7 @@ with open(path.join(here, 'README.rst'), encoding='utf-8') as f:
 
 setup(
     name='animats',
-    version='0.0.1',
+    version='0.0.4',
     description='Ecosystem with animats for development of Artificial General Intelligence',
     long_description=long_description,
     url='https://github.com/animatai/ecosystem',
@@ -30,10 +30,13 @@ setup(
         'Programming Language :: Python :: 3',
     ],
     keywords='animat ai agi artificial intelligence',
-    packages=find_packages(exclude=['contrib', 'docs', 'tests']),
+    packages=find_packages(exclude=['contrib', 'docs', 'test']),
     install_requires=['asyncio', 'numpy','gzutils', 'websockets'],
     extras_require={
         'dev': ['Pycco', 'pylint'],
         'test': ['coverage'],
     },
+   package_data={
+      '': ['LICENSE', 'index.html', 'images/*', 'config.py.template', 'start.sh'],
+   },
 )

@@ -18,9 +18,9 @@ SERVER_PORT = 5678
 # in the world folder
 #
 
-import worlds.blind_dog
-import worlds.random_agents
-import worlds.random_mom_and_calf
+import examples.blind_dog
+import examples.random_agents
+import examples.random_mom_and_calf
 
 #
 # Add a elif statement for each world like this:
