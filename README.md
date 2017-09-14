@@ -25,11 +25,19 @@ At least Python 3.5 is needed since `async` is used in `wsserver.py`. I'm using 
 Run the program
 ==============
 
-* Create `config.py`. Start with copying `config.py.template` and try some of the examples in there.
+Examples using the ecosystem classes are available in the
+repo [examples](https://github.com/animatai/examples)
+
+A little setup is needed first:
+
 * Activate `virtualenv`: `source venv3/bin/activate`
+* Create `config.py`. Start with copying `config.py.template` and try some of
+the examples from the repo mentioned above.
+
+Start a web server and a browser:
+
 * Run the server: `python wsserver.py`
 * Run `index.html` in a browser and follow the instructions.
-* It is possible to run a world without the web server like this: `python run_world.py blind_dog`
 
 
 Development
