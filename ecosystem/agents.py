@@ -63,6 +63,9 @@ class Action:
     def __repr__(self):
         return '<{} ({})>'.format(self.__name__, self.__class__.__name__)
 
+    def __eq__(self, other):
+        return self.__name__ == other.__name__
+
 
 # Use for actions involving NsArtifacts
 class NsAction:
@@ -72,6 +75,8 @@ class NsAction:
     def __repr__(self):
         return '<{} ({})>'.format(self.__name__, self.__class__.__name__)
 
+    def __eq__(self, other):
+        return self.__name__ == other.__name__
 
 # An Agent is a subclass of Thing with one required slot,
 # .program, which should hold a function that takes one argument, the
@@ -476,22 +481,22 @@ class XYEnvironment(Environment):
 
     def execute_action(self, agent, action, time):
         if action and isinstance(action, NsAction):
-            self.add_ns_artifact(NSArtifact(action), time)
+            self.add_ns_artifact(NSArtifact(action.__name__), time)
             return
 
         agent.bump = False
-        if action == 'TurnRight':
+        if action == Action('TurnRight'):
             agent.direction += Direction.R
-        elif action == 'TurnLeft':
+        elif action == Action('TurnLeft'):
             agent.direction += Direction.L
-        elif action == 'Forward':
+        elif action == Action('Forward'):
             agent.bump = self.move_to(agent, agent.direction.move_forward(agent.location))
 #         elif action == 'Grab':
 #             things = [thing for thing in self.list_things_at(agent.location)
 #                     if agent.can_grab(thing)]
 #             if things:
 #                 agent.holding.append(things[0])
-        elif action == 'Release':
+        elif action == Action('Release'):
             if agent.holding:
                 agent.holding.pop()
 
@@ -575,7 +580,7 @@ class XYEnvironment(Environment):
         headers = []
         histories = []
         for agent in self.agents:
-            if agent.status_history:
+            if hasattr(agent, 'status_history'):
                 for objective, history in agent.status_history.items():
                     headers.append(agent.__name__ + ':' + objective)
                     histories.append(history)

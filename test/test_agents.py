@@ -90,17 +90,17 @@ class TestAgents(unittest.TestCase):
         e.add_thing(t, (2, 2))
 
         # Down is the default direction
-        e.execute_action(a, 'Forward', 1)
+        e.execute_action(a, Action('Forward'), 1)
         self.assertTrue(a.location == (2, 1))
 
-        e.execute_action(a, 'TurnLeft', 1)
-        e.execute_action(a, 'Forward', 1)
+        e.execute_action(a, Action('TurnLeft'), 1)
+        e.execute_action(a, Action('Forward'), 1)
         self.assertTrue(a.location == (2, 0))
 
-        e.execute_action(a, 'TurnLeft', 1)
+        e.execute_action(a, Action('TurnLeft'), 1)
         self.assertTrue(a.direction.direction == Direction.L)
 
-        e.execute_action(a, 'Forward', 1)
+        e.execute_action(a, Action('Forward'), 1)
         self.assertTrue(a.location == (1, 0))
 
     def test_ns_action(self):
