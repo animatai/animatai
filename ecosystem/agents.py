@@ -23,10 +23,24 @@ l = Logging('agents', DEBUG_MODE)
 # The code
 # =========
 
+class NamedObject:
+    def __init__(self, name=None):
+        self.__name__ = name
+
+    def __repr__(self):
+        return '<{} ({})>'.format(self.__name__, self.__class__.__name__)
+
+    def __eq__(self, other):
+        return self.__name__ == other.__name__
+
+    def __hash__(self):
+        return hash(self.__name__)
+
+
 # This represents any physical object that can appear in an Environment.
 # You subclass Thing to get the things you want.  Each thing can have a
 # .__name__  slot (used for output only)
-class Thing:
+class Thing(NamedObject):
     def __init__(self, name='noname'):
         self.alive = None
         self.location = None
@@ -35,48 +49,23 @@ class Thing:
     def __repr__(self):
         return '<{} {} ({})>'.format(self.__name__, self.location, self.__class__.__name__)
 
-    def __eq__(self, other):
-        return self.__name__ == other.__name__
-
     # Things that are 'alive' should return true
     def is_alive(self):
         return hasattr(self, 'alive') and self.alive
 
 
 # This represents any non-spatial/physical artifact that can appear in an Environment.
-class NSArtifact:
-    def __init__(self, name=None):
-        self.__name__ = name
-
-    def __repr__(self):
-        return '<{} ({})>'.format(self.__name__, self.__class__.__name__)
-
-    def __eq__(self, other):
-        return self.__name__ == other.__name__
-
+class NSArtifact(NamedObject):
+    pass
 
 # Use for actions involving Things
-class Action:
-    def __init__(self, name=None):
-        self.__name__ = name
-
-    def __repr__(self):
-        return '<{} ({})>'.format(self.__name__, self.__class__.__name__)
-
-    def __eq__(self, other):
-        return self.__name__ == other.__name__
-
+class Action(NamedObject):
+    pass
 
 # Use for actions involving NsArtifacts
-class NsAction:
-    def __init__(self, name=None):
-        self.__name__ = name
+class NsAction(NamedObject):
+    pass
 
-    def __repr__(self):
-        return '<{} ({})>'.format(self.__name__, self.__class__.__name__)
-
-    def __eq__(self, other):
-        return self.__name__ == other.__name__
 
 # An Agent is a subclass of Thing with one required slot,
 # .program, which should hold a function that takes one argument, the
