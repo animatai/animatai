@@ -11,7 +11,7 @@ pylint ecosystem/*.py test/*.py
 
 # Genrate docs
 #pydoc -w *.py
-pycco *.py
+pycco ecosystem/*.py
 
 # Run the unit tests
 export PYTHONPATH=test
