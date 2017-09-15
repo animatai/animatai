@@ -580,7 +580,7 @@ class XYEnvironment(Environment):
 
         # Save the performance history to file
         save_csv_file('history.csv', histories, headers)
-        l.info('At least one agent lived for', len(list(zip(*histories))), 'steps')
+        l.info('Collected history of ', len(list(zip(*histories))), 'steps')
 
     # Adds an observer to the list of observers.
     # An observer is typically an EnvGUI.
