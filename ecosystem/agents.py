@@ -168,6 +168,10 @@ class Environment:
     def build_world(self):
         pass
 
+    # Needs to be overridden
+    def save_history(self):
+        pass
+
     # By default, we're done when we can't find a live agent
     def is_done(self):
         return not any(agent.is_alive() for agent in self.agents)
@@ -183,12 +187,13 @@ class Environment:
             # calc reward for previous actions
             if actions:
                 rewards = []
+                self.save_history()
                 for (agent, action) in zip(self.agents, actions):
                     rewards.append(self.calc_performance(agent, action))
 
             # determine new actions
             for agent, reward in zip(self.agents, rewards):
-                l.debug('step  - agent', agent, ', location:', agent.location, ', reward:', reward)
+                #l.debug('step  - agent', agent, ', location:', agent.location, ', reward:', reward)
 
                 action = None
                 if agent.alive:
@@ -242,7 +247,7 @@ class Environment:
     def list_nonspatial_at(self, time, tclass=NonSpatial):
         if not self.non_spatials.get(time, False):
             return []
-        return [nonspatial for nonspatial in self.non_spatials[time]
+        return [(nonspatial, None) for nonspatial in self.non_spatials[time]
                 if isinstance(nonspatial, tclass)]
 
     # Return true if at least one of the things at location
@@ -356,15 +361,13 @@ class XYEnvironment(Environment):
 
         options = DotDict(options)
         self.options = options
+
         self.width = options.width or 10
         self.height = options.height or 10
         self.observers = []
         self.thing_counter = 0
-        self.environment_history = {}
 
-        # Needs to be set in the subclass when used
-        if not hasattr(self, 'ENV_ENCODING'):
-            self.ENV_ENCODING = []
+        self.ENV_ENCODING = options.ENV_ENCODING or []
 
         # Sets iteration start and end (no walls).
         self.x_start, self.y_start = (0, 0)
@@ -379,9 +382,11 @@ class XYEnvironment(Environment):
         if options.things:
             self.add_things(options.things)
 
-        if options.save_history_for:
-            for cls in options.save_history_for:
-                self.environment_history[cls] = []
+        self.save_history_for = options.save_history_for or []
+
+        self.environment_history = {}
+        for cls in self.save_history_for:
+            self.environment_history[cls] = []
 
         # setup rendering in browser if options are there
         if options.wss:
@@ -554,7 +559,9 @@ class XYEnvironment(Environment):
 
     # Save history for environment
     def save_history(self):
-        for cls in self.options.save_history_for:
+        if not self.save_history_for:
+            return
+        for cls in self.save_history_for:
             self.environment_history[cls].append(len(self.list_things(cls)))
 
     # Save some stats
