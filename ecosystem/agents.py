@@ -23,6 +23,7 @@ l = Logging('agents', DEBUG_MODE)
 # The code
 # =========
 
+# Objects from this class are identified with their name (as opposed to the reference).
 class NamedObject:
     def __init__(self, name=None):
         self.__name__ = name
@@ -44,7 +45,7 @@ class Thing(NamedObject):
     def __init__(self, name='noname'):
         self.alive = None
         self.location = None
-        self.__name__ = name
+        super().__init__(name)
 
     def __repr__(self):
         return '<{} {} ({})>'.format(self.__name__, self.location, self.__class__.__name__)
@@ -55,15 +56,7 @@ class Thing(NamedObject):
 
 
 # This represents any non-spatial/physical artifact that can appear in an Environment.
-class NSArtifact(NamedObject):
-    pass
-
-# Use for actions involving Things
-class Action(NamedObject):
-    pass
-
-# Use for actions involving NsArtifacts
-class NsAction(NamedObject):
+class NonSpatial(NamedObject):
     pass
 
 
@@ -133,7 +126,7 @@ class Environment:
     def __init__(self):
         self.things = []
         self.agents = []
-        self.ns_artifacts = {} # indexed with time
+        self.non_spatials = {} # indexed with time
         self.actions = None
         self.rewards = None
 
@@ -143,7 +136,7 @@ class Environment:
         self.wss_cfg = None
 
     def __repr__(self):
-        return '<things:{s.things}, agents:{s.agents}, ns_artifacts:{s.ns_artifacts} ({s.__class__.__name__}>)'.format(s=self)
+        return '<things:{s.things}, agents:{s.agents}, non_spatials:{s.non_spatials} ({s.__class__.__name__}>)'.format(s=self)
 
     def thing_classes(self):
         return []  # List of classes that can go into environment
@@ -246,11 +239,11 @@ class Environment:
                 if thing.location == location and isinstance(thing, tclass)]
 
     # Return all non spatial artifacts at a given point in time
-    def list_ns_artifacts_at(self, time, tclass=NSArtifact):
-        if not self.ns_artifacts.get(time, False):
+    def list_nonspatial_at(self, time, tclass=NonSpatial):
+        if not self.non_spatials.get(time, False):
             return []
-        return [nsartifact for nsartifact in self.ns_artifacts[time]
-                if isinstance(nsartifact, tclass)]
+        return [nonspatial for nonspatial in self.non_spatials[time]
+                if isinstance(nonspatial, tclass)]
 
     # Return true if at least one of the things at location
     # is an instance of class tclass (or a subclass)
@@ -272,15 +265,17 @@ class Environment:
                 thing.performance = 0
                 self.agents.append(thing)
 
-    # Add a non spatial artifact to the environment, setting its time.
-    # artifacts added at time are available as percepts at time+1
-    def add_ns_artifact(self, nsartifact, time):
-        if self.ns_artifacts.get(time+1, False) and nsartifact in self.ns_artifacts:
-            l.error("Can't add the same ns artifact twice")
+    # Add a non spatial to the environment, setting its time.
+    # non_spatials added at `time` are available as percepts at `time+1`
+    def add_non_spatial(self, nonspatial, time):
+        if not isinstance(nonspatial, NonSpatial):
+            nonspatial = NonSpatial(nonspatial)
+        if self.non_spatials.get(time+1, False) and nonspatial in self.non_spatials[time+1]:
+            l.error("Can't add the same ns non_spatial twice")
         else:
-            if not self.ns_artifacts.get(time+1, False):
-                self.ns_artifacts[time+1] = []
-            self.ns_artifacts[time+1].append(nsartifact)
+            if not self.non_spatials.get(time+1, False):
+                self.non_spatials[time+1] = []
+            self.non_spatials[time+1].append(nonspatial)
 
     # Remove a thing from the environment
     def delete_thing(self, thing):
@@ -460,7 +455,7 @@ class XYEnvironment(Environment):
     # By default, agent perceives things within a default radius.
     def percept(self, agent, time):
         percepts = self.things_near(agent.location)
-        percepts.extend(self.list_ns_artifacts_at(time))
+        percepts.extend(self.list_nonspatial_at(time))
         return percepts
 
     def show_message(self, msg):
@@ -469,25 +464,23 @@ class XYEnvironment(Environment):
         l.info(msg)
 
     def execute_action(self, agent, action, time):
-        if action and isinstance(action, NsAction):
-            self.add_ns_artifact(NSArtifact(action.__name__), time)
-            return
-
         agent.bump = False
-        if action == Action('TurnRight'):
+        if action == 'TurnRight':
             agent.direction += Direction.R
-        elif action == Action('TurnLeft'):
+        elif action == 'TurnLeft':
             agent.direction += Direction.L
-        elif action == Action('Forward'):
+        elif action == 'Forward':
             agent.bump = self.move_to(agent, agent.direction.move_forward(agent.location))
 #         elif action == 'Grab':
 #             things = [thing for thing in self.list_things_at(agent.location)
 #                     if agent.can_grab(thing)]
 #             if things:
 #                 agent.holding.append(things[0])
-        elif action == Action('Release'):
+        elif action == 'Release':
             if agent.holding:
                 agent.holding.pop()
+        elif action == 'sing':
+            self.add_non_spatial('song', time)
 
     # _=thing
     def default_location(self, _):

@@ -9,7 +9,7 @@
 
 import unittest
 from gzutils.gzutils import Logging
-from ecosystem.agents import Agent, Thing, Direction, XYEnvironment, Action, NsAction
+from ecosystem.agents import Agent, Thing, Direction, XYEnvironment
 
 # Setup logging
 # =============
@@ -90,17 +90,17 @@ class TestAgents(unittest.TestCase):
         e.add_thing(t, (2, 2))
 
         # Down is the default direction
-        e.execute_action(a, Action('Forward'), 1)
+        e.execute_action(a, 'Forward', 1)
         self.assertTrue(a.location == (2, 1))
 
-        e.execute_action(a, Action('TurnLeft'), 1)
-        e.execute_action(a, Action('Forward'), 1)
+        e.execute_action(a, 'TurnLeft', 1)
+        e.execute_action(a, 'Forward', 1)
         self.assertTrue(a.location == (2, 0))
 
-        e.execute_action(a, Action('TurnLeft'), 1)
+        e.execute_action(a, 'TurnLeft', 1)
         self.assertTrue(a.direction.direction == Direction.L)
 
-        e.execute_action(a, Action('Forward'), 1)
+        e.execute_action(a, 'Forward', 1)
         self.assertTrue(a.location == (1, 0))
 
     def test_ns_action(self):
@@ -111,19 +111,20 @@ class TestAgents(unittest.TestCase):
         e.add_thing(a, (1, 1))
 
         # song at time=1 will be heard by other agents at time=2
-        e.execute_action(a, NsAction('sing'), 1)
-        self.assertTrue(len(e.list_ns_artifacts_at(2)) == 1)
+        e.execute_action(a, 'sing', 1)
+        l.debug('XXX', e.list_nonspatial_at(2))
+        #self.assertTrue(len(e.list_nonspatial_at(2)) == 1)
 
     def test_step(self):
         l.info('test_step')
 
         def program1(percept):
             self.assertTrue(percept != [])
-            return Action('do nothing')
+            return 'do nothing'
 
         def program2(percept):
             self.assertTrue(percept != [])
-            return NsAction('say nothing')
+            return 'say nothing'
 
         e = XYEnvironment({})
         a1 = Agent(program1, 'agent1')

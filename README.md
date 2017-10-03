@@ -47,8 +47,7 @@ Use [Google Style Guide](https://google.github.io/styleguide/pyguide.html)
 and make sure that the unit tests are maintained.
 
 Build (lint and run unit tests) with: `./build.sh`
-
-Create a source distribution: `python setup.py sdist`
+Building will also Create a source distribution in the `dist` folder.
 
 Upload the build to the public package repo for installation with `pip`:
 `twine upload dist/animats-X.Y.Z.tar.gz`
