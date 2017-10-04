@@ -32,10 +32,10 @@ class Node:
     def __repr__(self):
         return '(' + self.type_ + ' - vars:' + str(self.vars_) + ',inputs:' + str(self.inputs) + ')'
 
-# Create a sensor that recognise Things of type `cls`
-def sensor_factory(cls):
+# Create a sensor that recognise Things of type `cls`, radius is ignored
+def SENSOR_factory(cls):
     return Node('SENSOR:' + cls.__name__,
-                lambda things, _: (any([isinstance(x, cls) for x in things]), []),
+                lambda things, _: (any([isinstance(x, cls) for x, _ in things]), []),
                 [], [])
 
 def AND_factory(indexes, state):
@@ -101,7 +101,7 @@ class Network:
             self.root_nodes.remove(self.nodes[i])
 
     def add_SENSOR_node(self, cls):
-        self.add_root_node(sensor_factory(cls))
+        self.add_root_node(SENSOR_factory(cls))
 
     def add_AND_node(self, indexes):
         self.add_root_node(AND_factory(indexes, self.state))
