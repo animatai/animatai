@@ -14,9 +14,12 @@ DEBUG_MODE = True
 l = Logging('network', DEBUG_MODE)
 
 #
-# func - the function to apply to the percept:[Things], vars:[any type] -> (boolean, [any type])
+# type - a string speciying the type of node (for information only)
+# func - the function to apply to the percept:[(Thing|NonSpatial, radius)], vars:[any type] -> (boolean, [any type])
 # vars - the initial state the function executes in, necessary for SEQ (and other
 #        function that require a state)
+# inputs - indexes if the nodes that the nodes takes input from (for information only)
+#
 class Node:
     # pylint: disable=too-few-public-methods
     def __init__(self, type_, func, vars_, inputs):
