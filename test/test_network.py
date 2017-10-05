@@ -9,7 +9,7 @@
 
 import unittest
 from gzutils.gzutils import Logging
-from ecosystem.network import Network
+from ecosystem.network import Network, MotorNetwork
 
 
 # Setup logging
@@ -79,3 +79,57 @@ class TestNetwork(unittest.TestCase):
 
         network.update([])
         self.assertTrue(network.get() == (False, False, False))
+
+
+class TestMotorNetwork(unittest.TestCase):
+
+    def setUp(self):
+        l.info('Testing MotorNetwork...')
+
+    def tearDown(self):
+        l.info('...done with MotorNetwork.')
+
+    def test_MOTOR_AND_SEQ(self):
+        mnetwork = MotorNetwork()
+        n1 = mnetwork.add_MOTOR_node('m1')
+        self.assertTrue(mnetwork.get() == set())
+
+        mnetwork.update(set([n1]))
+        self.assertTrue(mnetwork.get() == set([0]))
+
+        mnetwork.update(set())
+        self.assertTrue(mnetwork.get() == set())
+
+        n2 = mnetwork.add_MOTOR_node('m2')
+        mnetwork.update(set([n2]))
+        self.assertTrue(mnetwork.get() == set([n2]))
+
+        mnetwork.update(set([n2, n1]))
+        self.assertTrue(mnetwork.get() == set([n1, n2]))
+
+        n3 = mnetwork.add_MAND_node([n1, n2])
+        mnetwork.update(set())
+        self.assertTrue(mnetwork.get() == set())
+        mnetwork.update(set([n3]))
+        self.assertTrue(mnetwork.get() == set([n1, n2]))
+
+        n4 = mnetwork.add_MOTOR_node('m3')
+        l.debug('XXX', mnetwork)
+        n5 = mnetwork.add_MSEQ_node([n3, n4])
+        mnetwork.update(set())
+        self.assertTrue(mnetwork.get() == set())
+        mnetwork.update(set())
+        self.assertTrue(mnetwork.get() == set())
+        mnetwork.update(set([n5]))
+        self.assertTrue(mnetwork.get() == set([n1, n2]))
+        mnetwork.update(set())
+        self.assertTrue(mnetwork.get() == set([n4]))
+        mnetwork.update(set())
+        self.assertTrue(mnetwork.get() == set())
+
+        l.debug('YYY', mnetwork)
+        mnetwork.delete_nodes([n5])
+        mnetwork.update(set([n4]))
+        self.assertTrue(mnetwork.get() == set([n4]))
+
+        l.debug('ZZZ', mnetwork)

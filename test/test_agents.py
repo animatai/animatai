@@ -112,8 +112,7 @@ class TestAgents(unittest.TestCase):
 
         # song at time=1 will be heard by other agents at time=2
         e.execute_action(a, 'sing', 1)
-        l.debug('XXX', e.list_nonspatial_at(2))
-        #self.assertTrue(len(e.list_nonspatial_at(2)) == 1)
+        self.assertTrue(len(e.list_nonspatial_at(2)) == 1)
 
     def test_step(self):
         l.info('test_step')
