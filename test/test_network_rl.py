@@ -189,7 +189,7 @@ class TestNetworkRL(unittest.TestCase):
 
         # (m1:bool,m2:bool,...,mn:bool)
         # actions and motors are the same '<','>','^','v'. It is only meaninfful to
-        # activate one motor at the time in this model. All other combinations of
+        # activate more than one motor at the time in this model. All other combinations of
         # active motors are mapped to the action '-' (do nothing)
         motors0 = ['<', '>', '^', 'v']
         self.motor_model0 = MotorModel(motors0,

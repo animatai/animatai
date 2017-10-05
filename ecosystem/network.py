@@ -18,7 +18,7 @@ l = Logging('network', DEBUG_MODE)
 # func - the function to apply to the percept:[(Thing|NonSpatial, radius)], vars:[any type] -> (boolean, [any type])
 # vars - the initial state the function executes in, necessary for SEQ (and other
 #        function that require a state)
-# inputs - indexes if the nodes that the nodes takes input from (for information only)
+# inputs - indexes if the nodes that the nodes takes input from (used in the update function)
 #
 class Node:
     # pylint: disable=too-few-public-methods
@@ -113,3 +113,51 @@ class Network:
     def add_SEQ_node(self, idx1, idx2):
         self.add_root_node(SEQ_factory(idx1, idx2, self.state))
         self.delete_root_nodes([idx1, idx2])
+
+#
+# MotorNetwork
+#
+# Similar to Network but with MOTORS in the leafes. The network nodes can be
+# MAND, MSEQ etc. Nodes are added in the same way as in the Network class
+# (and the root nodes updated as more nodes are added). Updating starts with
+# a tuple representing the state for the root nodes.#
+#
+# TODO: Should separate out the common parts rather than inheriting Network
+#       (add_SENSOR_node etc. makes little sense in this class)
+#
+
+# Create a motor
+def MOTOR_factory(name):
+    return Node('MOTOR:' + name,
+                lambda state, _: (state, []),
+                [], [])
+
+# The state of this node is not interesting. The purpose is only to update several nodes.
+# The inputs param in Node now represents outputs (since updating start from
+# the root nodes)
+def AND_factory(indexes, state):
+    return Node('MAND', lambda state, _2: (state, []),
+                [], indexes)
+
+class MotorNetwork(Network):
+
+    # motors = ['motor name']
+    def __init__(self, motors=None):
+        super().__init__()
+        if motors:
+            self.add_motors(motors)
+
+    # percept is a tuple with the state for the root nodes
+    # First update the state for this node, then update the children
+    def update_node(self, node, percept):
+        idx = self.nodes.index(node)
+        self.state[idx] = node(percept)
+        for i in node.inputs:
+            self.update_node(self.nodes[i], percept)
+
+    def add_MOTOR_node(self, name):
+        self.add_root_node(SENSOR_factory(cls))
+
+    def add_MAND_node(self, indexes):
+        self.add_root_node(MAND_factory(indexes, self.state))
+        self.delete_root_nodes(indexes)
