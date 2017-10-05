@@ -114,7 +114,6 @@ class TestMotorNetwork(unittest.TestCase):
         self.assertTrue(mnetwork.get() == set([n1, n2]))
 
         n4 = mnetwork.add_MOTOR_node('m3')
-        l.debug('XXX', mnetwork)
         n5 = mnetwork.add_MSEQ_node([n3, n4])
         mnetwork.update(set())
         self.assertTrue(mnetwork.get() == set())
@@ -127,9 +126,6 @@ class TestMotorNetwork(unittest.TestCase):
         mnetwork.update(set())
         self.assertTrue(mnetwork.get() == set())
 
-        l.debug('YYY', mnetwork)
         mnetwork.delete_nodes([n5])
         mnetwork.update(set([n4]))
         self.assertTrue(mnetwork.get() == set([n4]))
-
-        l.debug('ZZZ', mnetwork)
