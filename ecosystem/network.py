@@ -60,8 +60,8 @@ def AND_factory(indexes, state):
 # Increase the counter until all children have been updated, then delete it.
 # Many counters can exist at the same time.
 # vars = [counter1, ..., countern]
-def SEQ_factory(index, children, state):
-    def update(percept, vars_):
+def SEQ_factory(children, state):
+    def update(_, vars_):
         # the (seq, counter) tuples are stored in reverse order in vars_
         if state[children[0]]:
             vars_.insert(0, (True, 0))
@@ -153,7 +153,7 @@ class Network:
 #        return idx
 
     def add_SEQ_node(self, indexes):
-        idx = self.add_root_node(SEQ_factory(len(self.state), indexes, self.state))
+        idx = self.add_root_node(SEQ_factory(indexes, self.state))
         self.delete_root_nodes(indexes)
         return idx
 
@@ -167,6 +167,7 @@ class Network:
     def top_active__(self, nodes):
         res = set()
         for node in nodes:
+            idx = self.nodes.index(node)
             if self.state[idx]:
                 res |= {idx}
             else:
