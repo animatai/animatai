@@ -4,6 +4,7 @@
 # Imports
 # =======
 
+import math
 from gzutils.gzutils import Logging
 
 
@@ -49,10 +50,32 @@ def AND_factory(indexes, state):
 
 # t:state[idx1] followed by t+1:state[idx2]
 # NOTE: the value of t:state[idx2] and t+1:state[idx1] makes no difference
-def SEQ_factory(idx1, idx2, state):
-    return Node('SEQ',
-                lambda things, vars_: (bool(vars_[0]) and state[idx2], [state[idx1]]),
-                [None], [idx1, idx2])
+#def SEQ_factory(idx1, idx2, state):
+#    return Node('SEQ',
+#                lambda things, vars_: (bool(vars_[0]) and state[idx2], [state[idx1]]),
+#                [None], [idx1, idx2])
+
+# Create a counter initially set to 0 each time state[index] is true.
+# Update state[children[counter]] each time update is called.
+# Increase the counter until all children have been updated, then delete it.
+# Many counters can exist at the same time.
+# vars = [counter1, ..., countern]
+def SEQ_factory(index, children, state):
+    def update(percept, vars_):
+        # the (seq, counter) tuples are stored in reverse order in vars_
+        if state[children[0]]:
+            vars_.insert(0, (True, 0))
+        new_vars = []
+        seq = False
+        counter = math.inf
+        for seq, counter in vars_:
+            seq = seq and state[children[counter]]
+            if counter < len(children) - 1:
+                new_vars.append((seq, counter + 1))
+
+        return (seq and counter == len(children) - 1, new_vars)
+    return Node('SEQ', update, [], children)
+
 
 #
 # state - a list of booleans consisting of the sensors and other nodes that
@@ -93,11 +116,11 @@ class Network:
             self.update_node(self.nodes[i], percept)
         self.state[idx] = node(percept)
 
-    def get(self):
+    def getT(self):
         return tuple(self.state)
 
     # return a set of indexes for the nodes that are active
-    def getS(self):
+    def get(self):
         res = set()
         for i in range(0, len(self.state)):
             if self.state[i]:
@@ -124,9 +147,14 @@ class Network:
         self.delete_root_nodes(indexes)
         return idx
 
-    def add_SEQ_node(self, idx1, idx2):
-        idx = self.add_root_node(SEQ_factory(idx1, idx2, self.state))
-        self.delete_root_nodes([idx1, idx2])
+#    def add_SEQ_node(self, idx1, idx2):
+#        idx = self.add_root_node(SEQ_factory(idx1, idx2, self.state))
+#        self.delete_root_nodes([idx1, idx2])
+#        return idx
+
+    def add_SEQ_node(self, indexes):
+        idx = self.add_root_node(SEQ_factory(len(self.state), indexes, self.state))
+        self.delete_root_nodes(indexes)
         return idx
 
     def delete_nodes(self, indexes):
@@ -135,6 +163,31 @@ class Network:
             for child in self.nodes[idx].children:
                 self.root_nodes.append(self.nodes[child])
             self.nodes[idx] = self.state[idx] = None
+
+    def top_active__(self, nodes):
+        res = set()
+        for node in nodes:
+            if self.state[idx]:
+                res |= {idx}
+            else:
+                res |= self.top_active__(node.children)
+        return res
+
+    def top_active_(self, node):
+        idx = self.nodes.index(node)
+        if self.state[idx]:
+            return {idx}
+        res = set()
+        for child in node.children:
+            res |= self.top_active_(self.nodes[child])
+        return res
+
+    def top_active(self):
+        res = set()
+        for node in self.root_nodes:
+            res |= self.top_active_(node)
+        return res
+
 
 #
 # MotorNetwork

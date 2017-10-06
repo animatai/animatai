@@ -25,6 +25,9 @@ class Thing1:
 class Thing2:
     pass
 
+class Thing3:
+    pass
+
 class TestNetwork(unittest.TestCase):
 
     def setUp(self):
@@ -37,48 +40,78 @@ class TestNetwork(unittest.TestCase):
         network = Network()
         network.add_SENSOR_node(Thing1)
 
-        self.assertTrue(network.get() == (None,))
+        self.assertTrue(network.getT() == (None,))
 
         network.update([(Thing2(), 1.0)])
-        self.assertTrue(network.get() == (False,))
+        self.assertTrue(network.getT() == (False,))
 
         network.update([(Thing1(), 1.0)])
-        self.assertTrue(network.get() == (True,))
+        self.assertTrue(network.getT() == (True,))
 
         network.add_SENSOR_node(Thing2)
         network.update([(Thing2(), 1.0)])
-        self.assertTrue(network.get() == (False, True, ))
+        self.assertTrue(network.getT() == (False, True, ))
 
         network.update([])
-        self.assertTrue(network.get() == (False, False, ))
+        self.assertTrue(network.getT() == (False, False, ))
 
         network.update([(Thing2(), 2.0), (Thing1(), 0.5)])
-        self.assertTrue(network.get() == (True, True, ))
+        self.assertTrue(network.getT() == (True, True, ))
 
         network.add_AND_node([0, 1])
         network.update([(Thing2(), 1.0), (Thing1(), 0.3)])
-        self.assertTrue(network.get() == (True, True, True))
+        self.assertTrue(network.getT() == (True, True, True))
 
         network.update([(Thing2(), 2.0)])
-        self.assertTrue(network.get() == (False, True, False))
+        self.assertTrue(network.getT() == (False, True, False))
 
     def test_SEQ(self):
         network = Network([('thing1', Thing1), ('thing2', Thing2)])
-        #network.add_SENSOR_node(Thing1)
-        #network.add_SENSOR_node(Thing2)
-        network.add_SEQ_node(0, 1)
+        network.add_SEQ_node([0, 1])
 
         network.update([(Thing1(), 1.0)])
-        self.assertTrue(network.get() == (True, False, False))
+        self.assertTrue(network.getT() == (True, False, False))
 
         network.update([(Thing2(), 0.5)])
-        self.assertTrue(network.get() == (False, True, True))
+        self.assertTrue(network.getT() == (False, True, True))
 
         network.update([(Thing2(), 1.0)])
-        self.assertTrue(network.get() == (False, True, False))
+        self.assertTrue(network.getT() == (False, True, False))
 
         network.update([])
-        self.assertTrue(network.get() == (False, False, False))
+        self.assertTrue(network.getT() == (False, False, False))
+
+
+    def test_top_active(self):
+        network = Network()
+        n1 = network.add_SENSOR_node(Thing1)
+        n2 = network.add_SENSOR_node(Thing2)
+        n3 = network.add_SENSOR_node(Thing3)
+        n4 = network.add_SEQ_node([n1, n2, n3])
+
+        network.update([(Thing1(), 1.0)])
+        self.assertTrue(network.get() == set([n1]))
+        self.assertTrue(network.top_active() == set([n1]))
+
+        network.update([(Thing2(), 1.0)])
+        self.assertTrue(network.get() == set([n2]))
+        self.assertTrue(network.top_active() == set([n2]))
+
+        network.update([(Thing3(), 1.0)])
+        self.assertTrue(network.get() == set([n3, n4]))
+        self.assertTrue(network.top_active() == set([n4]))
+
+        network.update([])
+        self.assertTrue(network.get() == set())
+
+        # Check that SEQ can keep track of multiple sequences at the same time
+        network.update([(Thing1(), 1.0)])
+        network.update([(Thing2(), 1.0), (Thing1(), 1.0)])
+        network.update([(Thing3(), 1.0), (Thing2(), 1.0)])
+        self.assertTrue(network.get() == set([n3, n2, n4]))
+        network.update([(Thing3(), 1.0)])
+        self.assertTrue(network.get() == set([n3, n4]))
+
 
 
 class TestMotorNetwork(unittest.TestCase):
