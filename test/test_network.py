@@ -162,3 +162,43 @@ class TestMotorNetwork(unittest.TestCase):
         mnetwork.delete_nodes([n5])
         mnetwork.update(set([n4]))
         self.assertTrue(mnetwork.get() == set([n4]))
+
+    def test_motor_to_action(self):
+
+        # set([(active_motors, action)])
+        # each motor is mapped to one action. It is only meaningful to
+        # activate one motor at the time. All other combinations of
+        # active motors are mapped to the action '-' (do nothing)
+        motors = ['<', '>', '^', 'v']
+        motors_to_action1 = {frozenset([0]): '<',
+                             frozenset([1]): '>',
+                             frozenset([2]): '^',
+                             frozenset([3]): 'v',
+                             '*': '-'}
+
+        mnetwork = MotorNetwork(motors, motors_to_action1)
+        mnetwork.update(frozenset([0]))
+        self.assertTrue(mnetwork.get_action() == '<')
+        mnetwork.update(frozenset([1]))
+        self.assertTrue(mnetwork.get_action() == '>')
+        mnetwork.update(frozenset([2]))
+        self.assertTrue(mnetwork.get_action() == '^')
+        mnetwork.update(frozenset([3]))
+        self.assertTrue(mnetwork.get_action() == 'v')
+
+
+        # Motor model where all combinations of active motors have an action
+        motors_to_action2 = {frozenset(): '<',
+                             frozenset([0]): '>',
+                             frozenset([1]): '^',
+                             frozenset([0, 1]): 'v'}
+
+        mnetwork = MotorNetwork(motors, motors_to_action2)
+        mnetwork.update(frozenset())
+        self.assertTrue(mnetwork.get_action() == '<')
+        mnetwork.update(frozenset([0]))
+        self.assertTrue(mnetwork.get_action() == '>')
+        mnetwork.update(frozenset([1]))
+        self.assertTrue(mnetwork.get_action() == '^')
+        mnetwork.update(frozenset([0, 1]))
+        self.assertTrue(mnetwork.get_action() == 'v')

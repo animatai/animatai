@@ -125,7 +125,7 @@ class Network:
         for i in range(0, len(self.state)):
             if self.state[i]:
                 res |= {i}
-        return res
+        return frozenset(list(res))
 
     def add_root_node(self, node):
         self.state.append(None)
@@ -164,16 +164,6 @@ class Network:
                 self.root_nodes.append(self.nodes[child])
             self.nodes[idx] = self.state[idx] = None
 
-    def top_active__(self, nodes):
-        res = set()
-        for node in nodes:
-            idx = self.nodes.index(node)
-            if self.state[idx]:
-                res |= {idx}
-            else:
-                res |= self.top_active__(node.children)
-        return res
-
     def top_active_(self, node):
         idx = self.nodes.index(node)
         if self.state[idx]:
@@ -187,7 +177,7 @@ class Network:
         res = set()
         for node in self.root_nodes:
             res |= self.top_active_(node)
-        return res
+        return frozenset(list(res))
 
 
 #
@@ -243,13 +233,18 @@ def MSEQ_factory(index, children, state):
 class MotorNetwork(Network):
 
     # motors = ['motor name']
-    def __init__(self, motor_names=None):
+    def __init__(self, motor_names=None, motors_to_action=None):
         super().__init__()
-        # indexes of the MOTOR:s in self.state
+
+        motor_names = motor_names or []
+
+        # indexes of each MOTOR in self.state
         self.motors = []
-        self.motor_names = motor_names or []
-        for name in self.motor_names:
-            self.motors.append(self.add_MOTOR_node(name))
+        self.motor_names = []
+        self.motors_to_action = motors_to_action or {}
+
+        for name in motor_names:
+            self.add_MOTOR_node(name)
 
     def __repr__(self):
         return ('state:' + str(self.state) +
@@ -257,7 +252,6 @@ class MotorNetwork(Network):
                 ', nodes:' + str(self.nodes) +
                 ', root_nodes:' + str(self.root_nodes) +
                 ', motors:' + str(self.motors))
-
 
     # indexes is a set with the indexes of the nodes that should be True
     def update(self, percept):
@@ -272,18 +266,23 @@ class MotorNetwork(Network):
         for i in node.children:
             self.update_node(self.nodes[i], None)
 
-    # return a set of indexes for the motors that are active
+    # return a (frozen)set of indexes for the motors that are active
     def get(self):
         res = set()
         for i in self.motors:
             if self.state[i]:
                 res |= {i}
-        return res
+        return frozenset(list(res))
+
+    def get_action(self):
+        action = self.motors_to_action.get(self.get(), None)
+        return action or self.motors_to_action['*']
 
     def add_MOTOR_node(self, name):
         self.motor_names.append(name)
-        self.motors.append(len(self.state))
-        return self.add_root_node(MOTOR_factory(name))
+        idx = self.add_root_node(MOTOR_factory(name))
+        self.motors.append(idx)
+        return idx
 
     def add_MAND_node(self, indexes):
         idx = self.add_root_node(MAND_factory(len(self.state), indexes, self.state))
