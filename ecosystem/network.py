@@ -5,6 +5,7 @@
 # =======
 
 import math
+from random import random
 from gzutils.gzutils import Logging
 
 
@@ -47,6 +48,16 @@ def SENSOR_factory(cls):
 def AND_factory(indexes, state):
     return Node('AND', lambda _, _2: (all([state[i] for i in indexes]), []),
                 [], indexes)
+
+# _=indexes, _2=state
+def RAND_factory(prob):
+    return Node('RAND', lambda _, _2: (random() < prob, []),
+                [], [])
+
+def NOT_factory(indexes, state):
+    return Node('NOT', lambda _, _2: (all([not state[i] for i in indexes]), []),
+                [], indexes)
+
 
 # t:state[idx1] followed by t+1:state[idx2]
 # NOTE: the value of t:state[idx2] and t+1:state[idx1] makes no difference
@@ -109,6 +120,7 @@ class Network:
     def update(self, percept):
         for node in self.root_nodes:
             self.update_node(node, percept)
+        return self.get()
 
     def update_node(self, node, percept):
         idx = self.nodes.index(node)
@@ -116,7 +128,7 @@ class Network:
             self.update_node(self.nodes[i], percept)
         self.state[idx] = node(percept)
 
-    def getT(self):
+    def get_state(self):
         return tuple(self.state)
 
     # return a set of indexes for the nodes that are active
@@ -142,8 +154,16 @@ class Network:
     def add_SENSOR_node(self, cls):
         return self.add_root_node(SENSOR_factory(cls))
 
+    def add_RAND_node(self, prob):
+        return self.add_root_node(RAND_factory(prob))
+
     def add_AND_node(self, indexes):
         idx = self.add_root_node(AND_factory(indexes, self.state))
+        self.delete_root_nodes(indexes)
+        return idx
+
+    def add_NOT_node(self, indexes):
+        idx = self.add_root_node(NOT_factory(indexes, self.state))
         self.delete_root_nodes(indexes)
         return idx
 
@@ -241,7 +261,7 @@ class MotorNetwork(Network):
         # indexes of each MOTOR in self.state
         self.motors = []
         self.motor_names = []
-        self.motors_to_action = motors_to_action or {}
+        self.motors_to_action = motors_to_action or {'*': '-'}
 
         for name in motor_names:
             self.add_MOTOR_node(name)
@@ -260,6 +280,7 @@ class MotorNetwork(Network):
             self.state[idx] = idx in percept
         for node in self.root_nodes:
             self.update_node(node, None)
+        return self.get_action()
 
     def update_node(self, node, percept):
         node(None)
