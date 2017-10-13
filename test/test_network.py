@@ -131,10 +131,12 @@ class TestNetwork(unittest.TestCase):
 
         l.debug('TTT', network.update([(Thing1(), 1.0)]))
         self.assertTrue(network.update([(Thing1(), 1.0)]) - set([n1]) == set([n1T]))
-        self.assertTrue(network.update([(Thing2(), 1.0)]) - set([n2])== set([n2T]))
-        self.assertTrue(network.update([(Thing3(), 1.0)]) - set([n3])== set([n3T]))
-        self.assertTrue(network.update([(Thing1(), 1.0), (Thing2(), 1.0)]) - set([n1, n2]) == set())
-        self.assertTrue(network.update([(Thing1(), 1.0), (Thing2(), 1.0), (Thing3(), 1.0)]) - set ([n1, n2, n3])== set())
+        self.assertTrue(network.update([(Thing2(), 1.0)]) - set([n2]) == set([n2T]))
+        self.assertTrue(network.update([(Thing3(), 1.0)]) - set([n3]) == set([n3T]))
+        self.assertTrue(network.update([(Thing1(), 1.0), (Thing2(), 1.0)]) -
+                        set([n1, n2]) == set())
+        self.assertTrue(network.update([(Thing1(), 1.0), (Thing2(), 1.0), (Thing3(), 1.0)]) -
+                        set([n1, n2, n3]) == set())
         self.assertTrue(network.update([]) == set())
 
         m1 = network.add_MIN_node(1, [n1, n2, n3])
