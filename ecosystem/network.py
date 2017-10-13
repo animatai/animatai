@@ -49,6 +49,22 @@ def AND_factory(indexes, state):
     return Node('AND', lambda _, _2: (all([state[i] for i in indexes]), []),
                 [], indexes)
 
+def OR_factory(indexes, state):
+    return Node('OR', lambda _, _2: (any([state[i] for i in indexes]), []),
+                [], indexes)
+
+def ONE_factory(index, indexes, state):
+    return Node('ONE', lambda _, _2: (all([state[index] if i == index else not state[i] for i in indexes]), []),
+                [], indexes)
+
+def MIN_factory(n, indexes, state):
+    return Node('MIN', lambda _, _2: ([state[i] for i in indexes].count(True) >= n, []),
+                [], indexes)
+
+def MAX_factory(n, indexes, state):
+    return Node('MAX', lambda _, _2: ([state[i] for i in indexes].count(True) <= n, []),
+                [], indexes)
+
 # _=indexes, _2=state
 def RAND_factory(prob):
     return Node('RAND', lambda _, _2: (random() < prob, []),
@@ -149,7 +165,8 @@ class Network:
     # root nodes
     def delete_root_nodes(self, indexes):
         for i in indexes:
-            self.root_nodes.remove(self.nodes[i])
+            if self.nodes[i] in self.root_nodes:
+                self.root_nodes.remove(self.nodes[i])
 
     def add_SENSOR_node(self, cls):
         return self.add_root_node(SENSOR_factory(cls))
@@ -159,6 +176,26 @@ class Network:
 
     def add_AND_node(self, indexes):
         idx = self.add_root_node(AND_factory(indexes, self.state))
+        self.delete_root_nodes(indexes)
+        return idx
+
+    def add_OR_node(self, indexes):
+        idx = self.add_root_node(OR_factory(indexes, self.state))
+        self.delete_root_nodes(indexes)
+        return idx
+
+    def add_ONE_node(self, index, indexes):
+        idx = self.add_root_node(ONE_factory(index, indexes, self.state))
+        self.delete_root_nodes(indexes)
+        return idx
+
+    def add_MIN_node(self, n, indexes):
+        idx = self.add_root_node(MIN_factory(n, indexes, self.state))
+        self.delete_root_nodes(indexes)
+        return idx
+
+    def add_MAX_node(self, n, indexes):
+        idx = self.add_root_node(MAX_factory(n, indexes, self.state))
         self.delete_root_nodes(indexes)
         return idx
 

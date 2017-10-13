@@ -81,7 +81,6 @@ class TestNetwork(unittest.TestCase):
         network.update([])
         self.assertTrue(network.get_state() == (False, False, False))
 
-
     def test_top_active(self):
         network = Network()
         n1 = network.add_SENSOR_node(Thing1)
@@ -120,6 +119,47 @@ class TestNetwork(unittest.TestCase):
             network.update([])
             state = network.get_state()
             self.assertTrue(state[n1] != state[n2])
+
+    def test_ONE(self):
+        network = Network()
+        n1 = network.add_SENSOR_node(Thing1)
+        n2 = network.add_SENSOR_node(Thing2)
+        n3 = network.add_SENSOR_node(Thing3)
+        n1T = network.add_ONE_node(n1, [n1, n2, n3])
+        n2T = network.add_ONE_node(n2, [n1, n2, n3])
+        n3T = network.add_ONE_node(n3, [n1, n2, n3])
+
+        l.debug('TTT', network.update([(Thing1(), 1.0)]))
+        self.assertTrue(network.update([(Thing1(), 1.0)]) - set([n1]) == set([n1T]))
+        self.assertTrue(network.update([(Thing2(), 1.0)]) - set([n2])== set([n2T]))
+        self.assertTrue(network.update([(Thing3(), 1.0)]) - set([n3])== set([n3T]))
+        self.assertTrue(network.update([(Thing1(), 1.0), (Thing2(), 1.0)]) - set([n1, n2]) == set())
+        self.assertTrue(network.update([(Thing1(), 1.0), (Thing2(), 1.0), (Thing3(), 1.0)]) - set ([n1, n2, n3])== set())
+        self.assertTrue(network.update([]) == set())
+
+        m1 = network.add_MIN_node(1, [n1, n2, n3])
+        m2 = network.add_MIN_node(2, [n1, n2, n3])
+        m3 = network.add_MIN_node(3, [n1, n2, n3])
+
+        vs = network.update([(Thing3(), 1.0)])
+        self.assertTrue(m1 in vs and not m2 in vs and not m3 in vs)
+        vs = network.update([(Thing1(), 1.0), (Thing2(), 1.0)])
+        self.assertTrue(m2 in vs and m1 in vs and not m3 in vs)
+        vs = network.update([(Thing1(), 1.0), (Thing2(), 1.0), (Thing3(), 1.0)])
+        self.assertTrue(m3 in vs and  m2 in vs and  m1 in vs)
+
+        m1 = network.add_MAX_node(1, [n1, n2, n3])
+        m2 = network.add_MAX_node(2, [n1, n2, n3])
+        m3 = network.add_MAX_node(3, [n1, n2, n3])
+
+        vs = network.update([])
+        self.assertTrue(m1 in vs and m2 in vs and  m3 in vs)
+        vs = network.update([(Thing3(), 1.0)])
+        self.assertTrue(m1 in vs and m2 in vs and  m3 in vs)
+        vs = network.update([(Thing1(), 1.0), (Thing2(), 1.0)])
+        self.assertTrue(m2 in vs and not m1 in vs and m3 in vs)
+        vs = network.update([(Thing1(), 1.0), (Thing2(), 1.0), (Thing3(), 1.0)])
+        self.assertTrue(m3 in vs and not m2 in vs and not m1 in vs)
 
 
 class TestMotorNetwork(unittest.TestCase):
