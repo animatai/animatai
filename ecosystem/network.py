@@ -127,25 +127,26 @@ class Network:
             self.add_SENSOR_node(cls)
 
     def __repr__(self):
-        return ('state:' + str(self.state) +
-                ', nodes:' + str(self.nodes) +
-                ', root_nodes:' + str(self.root_nodes))
-
-    def toString(self):
         res = ''
         for i in range(0, len(self.nodes)):
             node = self.nodes[i]
             res += node.type_ + ':' + str(self.state[i]) + ':' + str(node.children) + ';'
         return res
 
-    def toGraphviz(self):
+        return (res +
+                'state:' + str(self.state) +
+                ', nodes:' + str(self.nodes) +
+                ', root_nodes:' + str(self.root_nodes))
+
+
+    def toGraphviz(self, color_edges=False):
         colors = ['black', 'blue', 'brown', 'cyan', 'darkgreen', 'deeppink', 'gold']
         res = 'digraph G {\n\tsize ="8,8";\n'
         for i in range(0, len(self.nodes)):
-            res += '\t{} [label="{}\\n{}\\n{}"];\n\tedge [color={}];\n'.format(i, i,
-                                                                               self.nodes[i].type_,
-                                                                               self.state[i],
-                                                                               colors[i % len(colors)])
+            res += '\t{} [label="{}\\n{}\\n{}"];\n'.format(i, i,
+                                                           self.nodes[i].type_,
+                                                           self.state[i])
+            res += '\tedge [color={}];\n'.format(colors[i % len(colors)]) if color_edges else ''
             for child in self.nodes[i].children:
                 res += '\t{}->{};\n'.format(child, i)
         res += '}'

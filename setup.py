@@ -10,8 +10,8 @@ with open(path.join(here, 'README.rst'), encoding='utf-8') as f:
     long_description = f.read()
 
 setup(
-    name='animats',
-    version='0.0.17',
+    name='animatai',
+    version='0.0.19',
     description='Ecosystem with animats for development of Artificial General Intelligence',
     long_description=long_description,
     url='https://github.com/animatai/ecosystem',

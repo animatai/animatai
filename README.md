@@ -4,7 +4,8 @@ Animats
 Reference code for:
 
 A General Model for Learning and Decision-Making in Artificial Animals by
-Claes Strannegård, Nils Svangård, Jonas Colmsjö, David Lindström, Joscha Bach and Bas Steunebrink
+Claes Strannegård, Nils Svangård, Jonas Colmsjö, David Lindström, Joscha Bach
+and Bas Steunebrink
 
 Submitted to IJCAI-17 AGA workshop, Melbourne, Australia
 
@@ -15,11 +16,11 @@ version of the original code.
 Setup
 =====
 
-At least Python 3.5 is needed since `async` is used in `wsserver.py`. I'm using Python 3.6 here.
+The easiest way to install `animatai` is with `pip install animatai`
 
-* First init `virtualenv` for Python3: `virtualenv -p python3.6 venv3` (`virutalenv` needs to be installed)
-* Activate `virtualenv`: `source venv3/bin/activate`
-* Install the necessary Python packages: `pip install -r requirements.txt`. Add `--no-compile` when running on ubuntu.
+At least Python 3.5 is needed since `async` is used in the web sockets server
+(`wsserver.py`).
+
 
 
 Run the program
@@ -42,6 +43,14 @@ Start a web server and a browser:
 
 Development
 ===========
+
+First setup a development environment. I'm using `virtualenv`:
+
+* First init `virtualenv` for Python3: `virtualenv -p python3.6 venv3`
+(`virutalenv` needs to be installed)
+* Activate `virtualenv`: `source venv3/bin/activate`
+* Install the necessary Python packages: `pip install -r requirements.txt`.
+Add `--no-compile` when running on ubuntu.
 
 Use [Google Style Guide](https://google.github.io/styleguide/pyguide.html)
 and make sure that the unit tests are maintained.
