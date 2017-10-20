@@ -31,10 +31,14 @@ class Node:
         self.vars_ = vars_
         self.func = func
         self.children = children
+        self.last_res = None
 
     def __call__(self, percept):
-        res, self.vars_ = self.func(percept, self.vars_)
-        return res
+        # This is necessary for nodes where the state is updated in each call (SEQ and RAND)
+        if self.last_res is not None:
+            return self.last_res
+        self.last_res, self.vars_ = self.func(percept, self.vars_)
+        return self.last_res
 
     def __repr__(self):
         return ('(' + self.type_ + ' - vars:' + str(self.vars_) +
@@ -55,20 +59,20 @@ def OR_factory(indexes, state):
                 [], indexes)
 
 def ONE_factory(index, indexes, state):
-    return Node('ONE', lambda _, _2: (all([state[index] if i == index else not state[i] for i in indexes]), []),
+    return Node('ONE:'+str(index), lambda _, _2: (all([state[index] if i == index else not state[i] for i in indexes]), []),
                 [], indexes)
 
 def MIN_factory(n, indexes, state):
-    return Node('MIN', lambda _, _2: ([state[i] for i in indexes].count(True) >= n, []),
+    return Node('MIN:'+str(n), lambda _, _2: ([state[i] for i in indexes].count(True) >= n, []),
                 [], indexes)
 
 def MAX_factory(n, indexes, state):
-    return Node('MAX', lambda _, _2: ([state[i] for i in indexes].count(True) <= n, []),
+    return Node('MAX:'+str(n), lambda _, _2: ([state[i] for i in indexes].count(True) <= n, []),
                 [], indexes)
 
 # _=indexes, _2=state
 def RAND_factory(prob):
-    return Node('RAND', lambda _, _2: (random() < prob, []),
+    return Node('RAND-'+str(prob), lambda _, _2: (random() < prob, []),
                 [], [])
 
 def NOT_factory(indexes, state):
@@ -127,17 +131,16 @@ class Network:
             self.add_SENSOR_node(cls)
 
     def __repr__(self):
-        res = ''
+        res = 'nodes - '
         for i in range(0, len(self.nodes)):
             node = self.nodes[i]
-            res += node.type_ + ':' + str(self.state[i]) + ':' + str(node.children) + ';'
+            res += (str(i) + ':' + node.type_ + ':' + str(node.vars_) + ':' +
+                    str(self.state[i]) + ':' + str(node.children) + ';')
+
+        res += 'root nodes - '
+        for node in self.root_nodes:
+            res += str(self.nodes.index(node)) + ','
         return res
-
-        return (res +
-                'state:' + str(self.state) +
-                ', nodes:' + str(self.nodes) +
-                ', root_nodes:' + str(self.root_nodes))
-
 
     def toGraphviz(self, color_edges=False):
         colors = ['black', 'blue', 'brown', 'cyan', 'darkgreen', 'deeppink', 'gold']
@@ -157,7 +160,6 @@ class Network:
         if not output_dir:
             output_dir = get_output_dir()
         output_path = os.path.join(output_dir, filename)
-        l.debug(output_path)
         filep = open(output_path, 'w')
         print(self.toGraphviz(), file=filep)
         filep.close()
@@ -166,6 +168,8 @@ class Network:
     # in the root nodes. Nodes might be updated several times, but this will do
     # for now.
     def update(self, percept):
+        for node in self.nodes:
+            node.last_res = None
         for node in self.root_nodes:
             self.update_node(node, percept)
         return self.get()

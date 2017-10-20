@@ -166,6 +166,30 @@ class TestNetwork(unittest.TestCase):
         l.debug('network.toGraphviz:', network.toGraphviz())
         network.saveGraphviz('graph.dot')
 
+    def test_complex(self):
+        N = self.network = Network()
+        SENSOR, RAND, AND = N.add_SENSOR_node, N. add_RAND_node, N.add_AND_node
+        NOT, OR = N.add_NOT_node, N.add_OR_node
+
+        s1, r1, r2, r3 = SENSOR(Thing1), RAND(0.3), RAND(0.3), RAND(0.3)
+        t1 = NOT([r1, r2])
+        t2 = NOT([r2, r3])
+        t3 = AND([r3, t1])
+        t4 = AND([r1, t2])
+        n3 = AND([NOT([s1]), OR([t4, t3])])
+        n4 = AND([NOT([s1]), NOT([r1, r2, r3])])
+        n2 = NOT([s1, n3, n4])
+
+        S = N.state
+        for i in range(0, 100):
+            percept = [(Thing1(), 1.0)] if i % 2 else []
+            vs = N.update(percept)
+            self.assertTrue(S[t1] == (not S[r1] and not S[r2]))
+            self.assertTrue(S[t2] == (not S[r2] and not S[r3]))
+            self.assertTrue(S[t3] == (S[r3] and S[t1]))
+            self.assertTrue(S[t4] == (S[r1] and S[t2]))
+            vs = vs & {s1, n2, n3, n4}
+            self.assertTrue(len(vs) == 1)
 
 class TestMotorNetwork(unittest.TestCase):
 
