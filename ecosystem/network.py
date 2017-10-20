@@ -230,7 +230,9 @@ class Network:
             res |= self.top_active_(self.nodes[child])
         return res
 
-    def top_active(self):
+    def top_active(self, percept=None):
+        if percept:
+            self.update(percept)
         res = set()
         for node in self.root_nodes:
             res |= self.top_active_(node)
