@@ -129,7 +129,6 @@ class TestNetwork(unittest.TestCase):
         n2T = network.add_ONE_node(n2, [n1, n2, n3])
         n3T = network.add_ONE_node(n3, [n1, n2, n3])
 
-        l.debug('TTT', network.update([(Thing1(), 1.0)]))
         self.assertTrue(network.update([(Thing1(), 1.0)]) - set([n1]) == set([n1T]))
         self.assertTrue(network.update([(Thing2(), 1.0)]) - set([n2]) == set([n2T]))
         self.assertTrue(network.update([(Thing3(), 1.0)]) - set([n3]) == set([n3T]))
@@ -162,6 +161,9 @@ class TestNetwork(unittest.TestCase):
         self.assertTrue(m2 in vs and not m1 in vs and m3 in vs)
         vs = network.update([(Thing1(), 1.0), (Thing2(), 1.0), (Thing3(), 1.0)])
         self.assertTrue(m3 in vs and not m2 in vs and not m1 in vs)
+
+        l.debug('XXX', network.toString())
+        network.saveGraphviz('graph.dot')
 
 
 class TestMotorNetwork(unittest.TestCase):

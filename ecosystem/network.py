@@ -5,8 +5,9 @@
 # =======
 
 import math
+import os
 from random import random
-from gzutils.gzutils import Logging
+from gzutils.gzutils import Logging, get_output_dir
 
 
 # Setup logging
@@ -129,6 +130,36 @@ class Network:
         return ('state:' + str(self.state) +
                 ', nodes:' + str(self.nodes) +
                 ', root_nodes:' + str(self.root_nodes))
+
+    def toString(self):
+        res = ''
+        for i in range(0, len(self.nodes)):
+            node = self.nodes[i]
+            res += node.type_ + ':' + str(self.state[i]) + ':' + str(node.children) + ';'
+        return res
+
+    def toGraphviz(self):
+        colors = ['black', 'blue', 'brown', 'cyan', 'darkgreen', 'deeppink', 'gold']
+        res = 'digraph G {\n\tsize ="8,8";\n'
+        for i in range(0, len(self.nodes)):
+            res += '\t{} [label="{}\\n{}\\n{}"];\n\tedge [color={}];\n'.format(i, i,
+                                                                     self.nodes[i].type_,
+                                                                     self.state[i],
+                                                                     colors[i % len(colors)])
+            for child in self.nodes[i].children:
+                res += '\t{}->{};\n'.format(child, i)
+        res += '}'
+        return res
+
+    def saveGraphviz(self, filename, output_dir=None):
+        # Save the performance history to file
+        if not output_dir:
+            output_dir = get_output_dir()
+        output_path = os.path.join(output_dir, filename)
+        l.debug(output_path)
+        filep = open(output_path, 'w')
+        print(self.toGraphviz(), file=filep)
+        filep.close()
 
     # the state of the network is updated using a depth first search starting
     # in the root nodes. Nodes might be updated several times, but this will do
