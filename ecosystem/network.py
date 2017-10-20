@@ -143,9 +143,9 @@ class Network:
         res = 'digraph G {\n\tsize ="8,8";\n'
         for i in range(0, len(self.nodes)):
             res += '\t{} [label="{}\\n{}\\n{}"];\n\tedge [color={}];\n'.format(i, i,
-                                                                     self.nodes[i].type_,
-                                                                     self.state[i],
-                                                                     colors[i % len(colors)])
+                                                                               self.nodes[i].type_,
+                                                                               self.state[i],
+                                                                               colors[i % len(colors)])
             for child in self.nodes[i].children:
                 res += '\t{}->{};\n'.format(child, i)
         res += '}'
