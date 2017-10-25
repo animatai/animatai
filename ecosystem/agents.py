@@ -579,7 +579,7 @@ class XYEnvironment(Environment):
             histories.append(history)
 
         # Save the performance history to file
-        save_csv_file('history.csv', histories, headers)
+        save_csv_file('history.csv', histories, headers, self.options.output_path)
         l.info('Collected history of ', len(list(zip(*histories))), 'steps')
 
     # Adds an observer to the list of observers.

@@ -3,7 +3,7 @@ astroid==1.5.2
 asyncio==3.4.3
 certifi==2017.7.27.1
 chardet==3.0.4
-gzutils==0.0.5
+gzutils==0.0.9
 idna==2.6
 isort==4.2.5
 lazy-object-proxy==1.2.2
