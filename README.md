@@ -59,7 +59,7 @@ Build (lint and run unit tests) with: `./build.sh`
 Building will also Create a source distribution in the `dist` folder.
 
 Upload the build to the public package repo for installation with `pip`:
-`twine upload dist/animats-X.Y.Z.tar.gz`
+`twine upload dist/animatai-X.Y.Z.tar.gz`
 
 
 Credits
