@@ -158,7 +158,7 @@ class Network:
     def saveGraphviz(self, filename, output_dir=None):
         # Save the performance history to file
         if not output_dir:
-            output_dir = get_output_dir()
+            output_dir = get_output_dir('/../output', __file__)
         output_path = os.path.join(output_dir, filename)
         filep = open(output_path, 'w')
         print(self.toGraphviz(), file=filep)

@@ -8,7 +8,8 @@
 # ======
 
 import unittest
-from gzutils.gzutils import Logging
+from math import isclose
+from gzutils.gzutils import DotDict, Logging
 from animatai.agents import Agent, Thing, Direction, XYEnvironment
 
 # Setup logging
@@ -125,7 +126,7 @@ class TestAgents(unittest.TestCase):
             self.assertTrue(percept != [])
             return 'say nothing'
 
-        e = XYEnvironment({})
+        e = XYEnvironment()
         a1 = Agent(program1, 'agent1')
         a2 = Agent(program2, 'agent2')
         t = Thing()
@@ -139,11 +140,84 @@ class TestAgents(unittest.TestCase):
         e.step(1)
         l.debug(e.actions, e.rewards)
         self.assertTrue(len(e.actions) == 2)
-        self.assertTrue(e.rewards == [0, 0])
+        self.assertTrue(e.rewards == [1, 1])
 
         e.step(2)
         self.assertTrue(len(e.actions) == 2)
+        l.debug('XXX', e.rewards)
         self.assertTrue(e.rewards == [1, 1])
+
+    def test_calc_performance(self):
+        l.info('test_calc_performance')
+
+        class Squid(Thing):
+            pass
+
+        class Cachelot(Agent):
+            def __init__(self):
+                super().__init__(None, 'Cachelot')
+                self.status_history = {'energy':[]}
+
+            def program(self, percept):
+                percepts, reward  = percept
+                if any([isinstance(p, Squid) for p,_ in percepts]):
+                    return 'eat_and_forward'
+                else:
+                    return 'forward'
+
+        options = {
+            'objectives': {'energy': 1.0},
+            'rewards': {
+                'eat_and_forward': {
+                    Squid: {
+                        'energy': 0.1
+                    },
+                    None: {
+                        'energy': -0.05
+                    }
+                },
+                'forward': {
+                    None: {
+                        'energy': -0.001
+                    }
+                }
+            }
+        }
+
+
+        e = XYEnvironment(options)
+        a = Cachelot()
+
+        e.add_thing(a, (1, 1))
+
+        l.debug('---- RUN STEP 1 ----')
+        e.step(1)
+        l.debug('action:', e.actions, ', status:', a.status, ', status_history', a.status_history)
+        self.assertTrue(a.status == {'energy': 1.0} )
+
+        l.debug('---- RUN STEP 2 ----')
+        e.step(2)
+        l.debug('action:', e.actions, ', status:', a.status, ', status_history', a.status_history)
+        self.assertTrue(a.status == {'energy': 0.999} )
+
+        s = Squid()
+        e.add_thing(s, (1, 1))
+        l.debug('---- RUN STEP 3 ----')
+        e.step(3)
+        l.debug('action:', e.actions, ', status:', a.status, ', status_history', a.status_history)
+        self.assertTrue(a.status == {'energy': 0.998} )
+
+        e.delete_thing(s)
+        l.debug('---- RUN STEP 4 ----')
+        e.step(4)
+        l.debug('action:', e.actions, ', status:', a.status, ', status_history', a.status_history)
+        self.assertTrue(a.status == {'energy': 1.098} )
+
+        l.debug('---- RUN STEP 5 ----')
+        e.step(5)
+        l.debug('action:', e.actions, ', status:', a.status, ', status_history', a.status_history)
+        self.assertTrue(isclose(a.status['energy'], 1.097))
+
 
     def tearDown(self):
         l.info('...done with test_agents.')

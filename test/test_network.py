@@ -162,9 +162,8 @@ class TestNetwork(unittest.TestCase):
         vs = network.update([(Thing1(), 1.0), (Thing2(), 1.0), (Thing3(), 1.0)])
         self.assertTrue(m3 in vs and not m2 in vs and not m1 in vs)
 
-        l.debug('network.__repr__:', network)
-        l.debug('network.toGraphviz:', network.toGraphviz())
-        network.saveGraphviz('graph.dot')
+        # NOTE: Need to be manually checked
+        network.saveGraphviz('test_ONE_graph.dot')
 
     def test_complex(self):
         N = self.network = Network()

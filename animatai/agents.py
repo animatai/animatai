@@ -123,7 +123,9 @@ def trace_agent(agent):
 # need this.
 class Environment:
     # pylint: disable=too-many-instance-attributes
-    def __init__(self):
+    def __init__(self, options={}):
+        self.options = DotDict(options)
+
         self.things = []
         self.agents = []
         self.non_spatials = {} # indexed with time
@@ -141,7 +143,7 @@ class Environment:
     def thing_classes(self):
         return []  # List of classes that can go into environment
 
-        # Return the percept that the agent sees at this point. (Implement this)
+    # Return the percept that the agent sees at this point. (Implement this)
     def percept(self, agent, time):
         raise NotImplementedError
 
@@ -149,9 +151,7 @@ class Environment:
     def execute_action(self, agent, action, time):
         raise NotImplementedError
 
-    # Return the reward for `agent` taking `action`. ALways return 1 for testing
-    # purposes, Implement this.
-    # _ = agent, _2 = action
+    # Return the reward for `agent` taking `action`.
     def calc_performance(self, _, _2):
         return 1
 
@@ -182,28 +182,36 @@ class Environment:
     # override this method.
     def step(self, time):
         if not self.is_done():
-            actions, actions1, rewards = self.actions, [], [0]*len(self.agents)
+            actions, actions1, rewards = self.actions, [], [{}]*len(self.agents) #[0]*len(self.agents)
 
-            # calc reward for previous actions
+            # use rewards for previous actions
             if actions:
-                rewards = []
-                self.save_history()
-                for (agent, action) in zip(self.agents, actions):
-                    rewards.append(self.calc_performance(agent, action))
+                rewards = self.rewards
 
-            # determine new actions
             for agent, reward in zip(self.agents, rewards):
                 #l.debug('step  - agent', agent, ', location:', agent.location, ', reward:', reward)
+                self.update_agent_status(agent, reward)
 
+                # determine new actions
                 action = None
                 if agent.alive:
                     percept = (self.percept(agent, time), reward)
                     action = agent.program(percept)
                 actions1.append(action)
 
+            self.save_history()
+
             # execute actions
+            rewards = []
             for (agent, action1) in zip(self.agents, actions1):
+                rewards.append(self.calc_performance(agent, action1))
                 self.execute_action(agent, action1, time)
+
+                l.info(agent.__name__, 'alive:', agent.alive,
+                       ', location:', agent.location,
+                       ', action:', action1,
+                       ', status:', agent.status if hasattr(agent, 'status') else None,
+                       ', rewards to be applied in next step:', rewards)
 
             self.actions = actions1
             self.rewards = rewards
@@ -356,11 +364,9 @@ class XYEnvironment(Environment):
 
     # pylint: disable=too-many-instance-attributes, arguments-differ, too-many-public-methods
 
-    def __init__(self, options):
-        super().__init__()
-
-        options = DotDict(options)
-        self.options = options
+    def __init__(self, options={}):
+        super().__init__(options)
+        options = self.options
 
         self.width = options.width or 10
         self.height = options.height or 10
@@ -422,6 +428,50 @@ class XYEnvironment(Environment):
     def exogenous_change(self):
         if self.options.exogenous_things_prob and random.random() < self.options.exogenous_things_prob:
             self.add_things(self.options.exogenous_things)
+
+    def update_agent_status(self, agent, rewards):
+        if (not 'objectives' in self.options  or
+            not 'rewards' in self.options):
+            return
+
+        if not hasattr(agent, 'status'):
+            agent.status = self.options['objectives'].copy()
+
+        for obj, rew in rewards.items():
+            agent.status[obj] += rew
+            agent.alive = agent.alive and agent.status[obj] > 0
+
+
+
+    # reward dict:
+    #     'reward':{
+    #        'eat_and_forward': {
+    #            Squid: { 'energy': 0.1 },
+    #            None: { 'energy': -0.05 }
+    #        },
+    #
+    def calc_performance(self, agent, action):
+        # pylint: disable=len-as-condition
+        # return 1 for test purposes for agents without objectives or rewards
+        if (not 'objectives' in self.options  or
+            not 'rewards' in self.options):
+            return 1
+
+        rewards = {}
+        for rewarded_action, object_and_objectives in self.options.rewards.items():
+            if action == rewarded_action:
+                for rewarded_thing, obj_and_reward in object_and_objectives.items():
+                    if (rewarded_thing and
+                        len(self.list_things_at(agent.location, rewarded_thing))):
+                        for obj, rew in obj_and_reward.items():
+                            if obj not in rewards:
+                                rewards[obj] = rew
+                    elif rewarded_thing is None:
+                        for obj, rew in obj_and_reward.items():
+                            if obj not in rewards:
+                                rewards[obj] = rew
+
+        return rewards
 
     # Adds things to the world using the spec. (list of strings) in the options
     def add_things(self, env):
@@ -559,10 +609,16 @@ class XYEnvironment(Environment):
 
     # Save history for environment
     def save_history(self):
-        if not self.save_history_for:
-            return
-        for cls in self.save_history_for:
-            self.environment_history[cls].append(len(self.list_things(cls)))
+        if self.save_history_for:
+            for cls in self.save_history_for:
+                self.environment_history[cls].append(len(self.list_things(cls)))
+
+        for agent in self.agents:
+            if hasattr(agent, 'status_history'):
+                for objective, history in agent.status_history.items():
+                    history.append(agent.status[objective])
+
+
 
     # Save some stats
     def finished(self):

@@ -12,8 +12,8 @@ import unittest
 
 from gzutils.gzutils import Logging, get_output_dir, save_csv_file
 
-from ecosystem.mdp import MDP
-from ecosystem.network_rl import MotorModel, SensorModel, NetworkDP, NetworkQLearningAgent
+from animatai.mdp import MDP
+from animatai.network_rl import MotorModel, SensorModel, NetworkDP, NetworkQLearningAgent
 
 # Setup logging
 # =============

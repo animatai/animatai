@@ -11,7 +11,7 @@ with open(path.join(here, 'README.rst'), encoding='utf-8') as f:
 
 setup(
     name='animatai',
-    version='0.0.21',
+    version='0.0.22',
     description='Ecosystem with animats for development of Artificial General Intelligence',
     long_description=long_description,
     url='https://github.com/animatai/animatai',
