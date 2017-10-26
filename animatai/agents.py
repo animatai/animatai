@@ -439,7 +439,7 @@ class XYEnvironment(Environment):
                 'rewards' not in self.options):
             return
 
-        if not hasattr(agent, 'status'):
+        if not hasattr(agent, 'status') or agent.status is None:
             agent.status = self.options['objectives'].copy()
 
         for obj, rew in rewards.items():
@@ -619,7 +619,9 @@ class XYEnvironment(Environment):
                 self.environment_history[cls].append(len(self.list_things(cls)))
 
         for agent in self.agents:
-            if hasattr(agent, 'status_history'):
+            if (hasattr(agent, 'status_history') and
+                    hasattr(agent, 'status') and
+                    agent.status is not None):
                 for objective, history in agent.status_history.items():
                     history.append(agent.status[objective])
 

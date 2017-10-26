@@ -31,7 +31,6 @@ repo [examples](https://github.com/animatai/examples)
 
 A little setup is needed first:
 
-* Activate `virtualenv`: `source venv3/bin/activate`
 * Create `config.py`. Start with copying `config.py.template` and try some of
 the examples from the repo mentioned above.
 

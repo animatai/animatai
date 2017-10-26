@@ -31,7 +31,7 @@ setup(
     ],
     keywords='animat ai agi artificial intelligence',
     packages=find_packages(exclude=['contrib', 'docs', 'test']),
-    install_requires=['asyncio', 'numpy','gzutils', 'websockets'],
+    install_requires=['asyncio', 'numpy', 'gzutils', 'websockets'],
     extras_require={
         'dev': ['Pycco', 'pylint'],
         'test': ['coverage'],
