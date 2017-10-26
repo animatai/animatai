@@ -192,11 +192,8 @@ class Environment:
             if actions:
                 rewards = self.rewards
 
+            # determine new actions
             for agent, reward in zip(self.agents, rewards):
-                #l.debug('step  - agent', agent, ', location:', agent.location, ', reward:', reward)
-                self.update_agent_status(agent, reward)
-
-                # determine new actions
                 action = None
                 if agent.alive:
                     percept = (self.percept(agent, time), reward)
@@ -433,20 +430,6 @@ class XYEnvironment(Environment):
     def exogenous_change(self):
         if self.options.exogenous_things_prob and random.random() < self.options.exogenous_things_prob:
             self.add_things(self.options.exogenous_things)
-
-    def update_agent_status(self, agent, rewards):
-        if ('objectives' not in self.options  or
-                'rewards' not in self.options):
-            return
-
-        if not hasattr(agent, 'status') or agent.status is None:
-            agent.status = self.options['objectives'].copy()
-
-        for obj, rew in rewards.items():
-            agent.status[obj] += rew
-            agent.alive = agent.alive and agent.status[obj] > 0
-
-
 
     # reward dict:
     #     'reward':{

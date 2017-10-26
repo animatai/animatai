@@ -82,7 +82,6 @@ def NOT_factory(indexes, state):
     return Node('NOT', lambda _, _2: (all([not state[i] for i in indexes]), []),
                 [], indexes)
 
-
 # t:state[idx1] followed by t+1:state[idx2]
 # NOTE: the value of t:state[idx2] and t+1:state[idx1] makes no difference
 #def SEQ_factory(idx1, idx2, state):
@@ -123,12 +122,16 @@ class Network:
     # pylint: disable=too-many-public-methods
 
     # sensors = [('sensor name', Thing to recognise)]
-    def __init__(self, sensors=None):
+    def __init__(self, sensors=None, needs=None):
         self.state = []
         self.nodes = []
         self.root_nodes = []
         if sensors:
             self.add_sensors(sensors)
+        self.needs = {}
+        self.needs_initial = {}
+        if needs:
+            self.add_NEEDs(needs)
 
     def add_sensors(self, sensors):
         for _, cls in sensors:
@@ -169,13 +172,14 @@ class Network:
         filep.close()
 
     # the state of the network is updated using a depth first search starting
-    # in the root nodes. Nodes might be updated several times, but this will do
-    # for now.
+    # in the root nodes.
     def update(self, percept):
+        percepts, rewards = percept
+        self.update_NEEDs(rewards)
         for node in self.nodes:
             node.last_res = None
         for node in self.root_nodes:
-            self.update_node(node, percept)
+            self.update_node(node, percepts)
         return self.get()
 
     def update_node(self, node, percept):
@@ -253,6 +257,19 @@ class Network:
         idx = self.add_root_node(SEQ_factory(indexes, self.state))
         self.delete_root_nodes(indexes)
         return idx
+
+    def add_NEEDs(self, objective_initial):
+        self.needs = {**self.needs, **objective_initial}
+        self.needs_initial = {**self.needs_initial, **objective_initial}
+        return self.needs
+
+    def get_NEEDs(self):
+        return self.needs
+
+    def update_NEEDs(self, rewards):
+        for objective, reward in rewards.items():
+            self.needs[objective] += rewards[objective]
+            self.needs[objective] = min(self.needs_initial[objective], self.needs[objective])
 
     def delete_nodes(self, indexes):
         self.delete_root_nodes(indexes)

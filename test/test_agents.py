@@ -11,6 +11,7 @@ import unittest
 from math import isclose
 from gzutils.gzutils import Logging
 from animatai.agents import Agent, Thing, Direction, XYEnvironment
+from animatai.network import Network
 
 # Setup logging
 # =============
@@ -159,10 +160,12 @@ class TestAgents(unittest.TestCase):
             def __init__(self):
                 super().__init__(None, 'Cachelot')
                 self.status_history = {'energy':[]}
-                self.status = None
+                self.network = Network(None, {'energy': 1.0})
+                self.status = self.network.get_NEEDs()
 
             def program(self, percept):
                 percepts, _ = percept
+                self.network.update(percept)
                 if any([isinstance(p, Squid) for p, _ in percepts]):
                     return 'eat_and_forward'
                 return 'forward'
@@ -213,12 +216,12 @@ class TestAgents(unittest.TestCase):
         l.debug('---- RUN STEP 4 ----')
         e.step(4)
         l.debug('action:', e.actions, ', status:', a.status, ', status_history', a.status_history)
-        self.assertTrue(a.status == {'energy': 1.098})
+        self.assertTrue(a.status == {'energy': 1.0})
 
         l.debug('---- RUN STEP 5 ----')
         e.step(5)
         l.debug('action:', e.actions, ', status:', a.status, ', status_history', a.status_history)
-        self.assertTrue(isclose(a.status['energy'], 1.097))
+        self.assertTrue(isclose(a.status['energy'], 0.999))
 
 
     def tearDown(self):
