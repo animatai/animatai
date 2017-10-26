@@ -198,6 +198,8 @@ class Environment:
                 if agent.alive:
                     percept = (self.percept(agent, time), reward)
                     action = agent.program(percept)
+                    if hasattr(agent, 'status'):
+                        agent.alive = agent.alive and all([status > 0.0 for obj, status in agent.status.items()])
                 actions1.append(action)
 
             self.save_history()
