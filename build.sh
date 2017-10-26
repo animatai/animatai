@@ -7,11 +7,11 @@ source venv3/bin/activate
 rm -rf docs
 
 # run lint to check code
-pylint ecosystem/*.py test/*.py
+pylint animatai/*.py test/*.py
 
 # Genrate docs
 #pydoc -w *.py
-pycco ecosystem/*.py
+pycco animatai/*.py
 
 # Run the unit tests
 export PYTHONPATH=test

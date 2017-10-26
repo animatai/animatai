@@ -14,7 +14,7 @@ setup(
     version='0.0.21',
     description='Ecosystem with animats for development of Artificial General Intelligence',
     long_description=long_description,
-    url='https://github.com/animatai/ecosystem',
+    url='https://github.com/animatai/animatai',
     author='Jonas Colmsjö',
     author_email='jonas.colmsjo@gizur.com',
     license='MIT',

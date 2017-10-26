@@ -9,7 +9,7 @@
 
 import unittest
 from gzutils.gzutils import Logging
-from ecosystem.network import Network, MotorNetwork
+from animatai.network import Network, MotorNetwork
 
 
 # Setup logging

@@ -9,7 +9,7 @@
 
 import unittest
 from gzutils.gzutils import Logging
-from ecosystem.agents import Agent, Thing, Direction, XYEnvironment
+from animatai.agents import Agent, Thing, Direction, XYEnvironment
 
 # Setup logging
 # =============
