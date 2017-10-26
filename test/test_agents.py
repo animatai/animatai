@@ -1,4 +1,4 @@
-# pylint: disable=missing-docstring, global-statement, invalid-name
+# pylint: disable=missing-docstring, global-statement, invalid-name, too-few-public-methods
 #
 # Copyright (C) 2017  Jonas Colmsjö, Claes Strannegård
 #
@@ -9,7 +9,7 @@
 
 import unittest
 from math import isclose
-from gzutils.gzutils import DotDict, Logging
+from gzutils.gzutils import Logging
 from animatai.agents import Agent, Thing, Direction, XYEnvironment
 
 # Setup logging
@@ -24,6 +24,7 @@ l = Logging('test_agents', DEBUG_MODE)
 
 
 class TestAgents(unittest.TestCase):
+    # pylint: disable=too-many-locals
 
     def setUp(self):
         l.info('Testing agents...')
@@ -154,16 +155,17 @@ class TestAgents(unittest.TestCase):
             pass
 
         class Cachelot(Agent):
+            # pylint: disable=no-self-use
             def __init__(self):
                 super().__init__(None, 'Cachelot')
                 self.status_history = {'energy':[]}
+                self.status = None
 
             def program(self, percept):
-                percepts, reward  = percept
-                if any([isinstance(p, Squid) for p,_ in percepts]):
+                percepts, _ = percept
+                if any([isinstance(p, Squid) for p, _ in percepts]):
                     return 'eat_and_forward'
-                else:
-                    return 'forward'
+                return 'forward'
 
         options = {
             'objectives': {'energy': 1.0},
@@ -193,25 +195,25 @@ class TestAgents(unittest.TestCase):
         l.debug('---- RUN STEP 1 ----')
         e.step(1)
         l.debug('action:', e.actions, ', status:', a.status, ', status_history', a.status_history)
-        self.assertTrue(a.status == {'energy': 1.0} )
+        self.assertTrue(a.status == {'energy': 1.0})
 
         l.debug('---- RUN STEP 2 ----')
         e.step(2)
         l.debug('action:', e.actions, ', status:', a.status, ', status_history', a.status_history)
-        self.assertTrue(a.status == {'energy': 0.999} )
+        self.assertTrue(a.status == {'energy': 0.999})
 
         s = Squid()
         e.add_thing(s, (1, 1))
         l.debug('---- RUN STEP 3 ----')
         e.step(3)
         l.debug('action:', e.actions, ', status:', a.status, ', status_history', a.status_history)
-        self.assertTrue(a.status == {'energy': 0.998} )
+        self.assertTrue(a.status == {'energy': 0.998})
 
         e.delete_thing(s)
         l.debug('---- RUN STEP 4 ----')
         e.step(4)
         l.debug('action:', e.actions, ', status:', a.status, ', status_history', a.status_history)
-        self.assertTrue(a.status == {'energy': 1.098} )
+        self.assertTrue(a.status == {'energy': 1.098})
 
         l.debug('---- RUN STEP 5 ----')
         e.step(5)

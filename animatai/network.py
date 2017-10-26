@@ -59,7 +59,10 @@ def OR_factory(indexes, state):
                 [], indexes)
 
 def ONE_factory(index, indexes, state):
-    return Node('ONE:'+str(index), lambda _, _2: (all([state[index] if i == index else not state[i] for i in indexes]), []),
+    return Node('ONE:'+str(index),
+                lambda _, _2: (all([state[index] if i == index
+                                    else not state[i]
+                                    for i in indexes]), []),
                 [], indexes)
 
 def MIN_factory(n, indexes, state):
@@ -117,6 +120,7 @@ def SEQ_factory(children, state):
 # root_nodes - the root Nodes in the trees that makes up the network
 #
 class Network:
+    # pylint: disable=too-many-public-methods
 
     # sensors = [('sensor name', Thing to recognise)]
     def __init__(self, sensors=None):

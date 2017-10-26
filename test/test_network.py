@@ -29,6 +29,7 @@ class Thing3:
     pass
 
 class TestNetwork(unittest.TestCase):
+    # pylint: disable=too-many-locals
 
     def setUp(self):
         l.info('Testing network...')
@@ -166,7 +167,7 @@ class TestNetwork(unittest.TestCase):
         network.saveGraphviz('test_ONE_graph.dot')
 
     def test_complex(self):
-        N = self.network = Network()
+        N = Network()
         SENSOR, RAND, AND = N.add_SENSOR_node, N. add_RAND_node, N.add_AND_node
         NOT, OR = N.add_NOT_node, N.add_OR_node
 

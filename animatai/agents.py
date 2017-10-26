@@ -123,7 +123,8 @@ def trace_agent(agent):
 # need this.
 class Environment:
     # pylint: disable=too-many-instance-attributes
-    def __init__(self, options={}):
+    def __init__(self, options=None):
+        options = options or {}
         self.options = DotDict(options)
 
         self.things = []
@@ -154,6 +155,9 @@ class Environment:
     # Return the reward for `agent` taking `action`.
     def calc_performance(self, _, _2):
         return 1
+
+    def update_agent_status(self, agent, rewards):
+        pass
 
     # Default location to place a new thing with unspecified location
     # param=thing
@@ -364,7 +368,8 @@ class XYEnvironment(Environment):
 
     # pylint: disable=too-many-instance-attributes, arguments-differ, too-many-public-methods
 
-    def __init__(self, options={}):
+    def __init__(self, options=None):
+        options = options or {}
         super().__init__(options)
         options = self.options
 
@@ -430,8 +435,8 @@ class XYEnvironment(Environment):
             self.add_things(self.options.exogenous_things)
 
     def update_agent_status(self, agent, rewards):
-        if (not 'objectives' in self.options  or
-            not 'rewards' in self.options):
+        if ('objectives' not in self.options  or
+                'rewards' not in self.options):
             return
 
         if not hasattr(agent, 'status'):
@@ -451,10 +456,10 @@ class XYEnvironment(Environment):
     #        },
     #
     def calc_performance(self, agent, action):
-        # pylint: disable=len-as-condition
+        # pylint: disable=len-as-condition, too-many-nested-blocks
         # return 1 for test purposes for agents without objectives or rewards
-        if (not 'objectives' in self.options  or
-            not 'rewards' in self.options):
+        if ('objectives' not in self.options  or
+                'rewards' not in self.options):
             return 1
 
         rewards = {}
@@ -462,7 +467,7 @@ class XYEnvironment(Environment):
             if action == rewarded_action:
                 for rewarded_thing, obj_and_reward in object_and_objectives.items():
                     if (rewarded_thing and
-                        len(self.list_things_at(agent.location, rewarded_thing))):
+                            len(self.list_things_at(agent.location, rewarded_thing))):
                         for obj, rew in obj_and_reward.items():
                             if obj not in rewards:
                                 rewards[obj] = rew
