@@ -9,6 +9,7 @@
 
 import unittest
 from gzutils.gzutils import Logging
+from animatai.agents import Thing
 from animatai.network import Network, MotorNetwork
 
 
@@ -19,7 +20,7 @@ DEBUG_MODE = True
 l = Logging('test_network', DEBUG_MODE)
 
 
-class Thing1:
+class Thing1(Thing):
     pass
 
 class Thing2:
@@ -199,6 +200,13 @@ class TestNetwork(unittest.TestCase):
 
         N.update(([], {'energy': -0.001}))
         self.assertTrue(N.get_NEEDs()['energy'] == 0.999)
+
+    def test_named_SENSOR(self):
+        network = Network()
+        n1 = network.add_SENSOR_node(Thing1, 'one')
+        self.assertTrue(network.update(([(Thing1('two'), 1.0)], {})) == set())
+        self.assertTrue(network.update(([(Thing1('one'), 1.0)], {})) == set([n1]))
+
 
 class TestMotorNetwork(unittest.TestCase):
 

@@ -45,10 +45,15 @@ class Node:
                 ',children:' + str(self.children) + ')')
 
 # Create a sensor that recognise Things of type `cls`, radius is ignored
-def SENSOR_factory(cls):
-    return Node('SENSOR:' + cls.__name__,
-                lambda things, _: (any([isinstance(x, cls) for x, _ in things]), []),
+def SENSOR_factory(cls, name=None):
+    if name is None:
+        return Node('SENSOR:' + cls.__name__,
+                    lambda things, _: (any([isinstance(x, cls) for x, _ in things]), []),
+                    [], [])
+    return Node('SENSOR:' + cls.__name__ + ":" + name,
+                lambda things, _: (any([isinstance(x, cls) and x.__name__ == name for x, _ in things]), []),
                 [], [])
+
 
 def AND_factory(indexes, state):
     return Node('AND', lambda _, _2: (all([state[i] for i in indexes]), []),
@@ -212,8 +217,8 @@ class Network:
             if self.nodes[i] in self.root_nodes:
                 self.root_nodes.remove(self.nodes[i])
 
-    def add_SENSOR_node(self, cls):
-        return self.add_root_node(SENSOR_factory(cls))
+    def add_SENSOR_node(self, cls, name=None):
+        return self.add_root_node(SENSOR_factory(cls, name))
 
     def add_RAND_node(self, prob):
         return self.add_root_node(RAND_factory(prob))
