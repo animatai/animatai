@@ -9,8 +9,9 @@ and Bas Steunebrink
 
 Submitted to IJCAI-17 AGA workshop, Melbourne, Australia
 
-This `dev` branch is work in progress and will contain a completely refactored
-version of the original code.
+This repo is work in progress and will contain a completely refactored
+version of the original code. The repo [ecosystem](https://github.com/animatai/ecosystem)
+contains the old version of the framework (which isn't maintained anymore).
 
 
 Setup
