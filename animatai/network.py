@@ -374,6 +374,9 @@ class MotorNetwork(Network):
                 ', root_nodes:' + str(self.root_nodes) +
                 ', motors:' + str(self.motors))
 
+    def motors_for_all_actions(self):
+        return list(self.motors_to_action.keys())
+
     # indexes is a set with the indexes of the nodes that should be True
     def update(self, percept):
         # pylint disable=arguments-differ

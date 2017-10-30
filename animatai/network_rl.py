@@ -151,7 +151,7 @@ class MotorModel:
 #
 class NetworkDP:
     # pylint: disable=too-many-arguments, too-many-instance-attributes
-    def __init__(self, init, statuses, motor_model, gamma=.9, sensor_model=None):
+    def __init__(self, init, statuses, motor_model, gamma=.9, sensor_model=None, actions_from_motors=None):
         self.init = init
         self.gamma = gamma
         self.statuses = statuses
@@ -159,7 +159,9 @@ class NetworkDP:
         self.sensor_model = sensor_model
         self.init_statuses = dict(statuses)
 
-        self.actlist = self.actions_from_motors()
+        # TODO: should remove the motor_model attribute and use the actions_from_motors
+        # argument instead
+        self.actlist = actions_from_motors or self.actions_from_motors()
 
         self.history = []
         self.history_headers = [str(list(statuses.keys())), 'state', 'action',
@@ -218,6 +220,7 @@ class NetworkDP:
             return a
 
         return list(map(tuple, actions_(self.motor_model.motors)))
+
 
 # Keeps track of the history of actions performed
 class NetworkAgent(Agent):
