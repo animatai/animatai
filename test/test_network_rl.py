@@ -13,7 +13,7 @@ import unittest
 from gzutils.gzutils import Logging, get_output_dir, save_csv_file
 
 from animatai.mdp import MDP
-from animatai.network_rl import SensorModel, NetworkDP, NetworkQLearningAgent
+from animatai.network_rl import NetworkDP, NetworkQLearningAgent
 
 # Setup logging
 # =============
@@ -156,6 +156,59 @@ def run_single_trial(agent_program, mdp, sensor_model, motor_model):
 #              ',next_network_action:', next_network_action
 #                )
         current_state = take_single_action(mdp, current_state, next_action)
+
+#
+# SensorModel
+# -----------
+#
+# Holds a model mapping sensors to states: {(s1,..., sn): 'state'}
+#
+# It is possible to create sensors from a mdp. One sensor is created for each
+# state. This is mainly used in simple examples/testing.
+#
+
+def mdp_to_simple_sensor_model(mdp):
+    # One sensor for each state in the MDP
+    sensor_template = [False] * len(mdp.states)
+    i = 0
+    model = {}
+    for state in sorted(mdp.states):
+        sensor = list(sensor_template)
+        sensor[i] = True
+        i += 1
+        model[tuple(sensor)] = state
+    return model
+
+
+# sensors = [('sensor name', Thing to recognise)]
+# model   = {(s1:bool,...,sn:bool): 'state'} maps sensor tuples to states (for readability)
+class SensorModel:
+    # pylint: disable=too-few-public-methods
+    def __init__(self, sensors, model=None, mdp=None):
+        self.sensors = sensors
+        if model and mdp:
+            raise Exception('Both model and mdp should not be used!')
+        if model:
+            self.model = model
+        if mdp:
+            self.model = mdp_to_simple_sensor_model(mdp)
+
+    def __repr__(self):
+        return 'SensorModel:' + str(self.model)
+
+    # return the state for a tuple of sensors
+    def __call__(self, sensors):
+        if not sensors:
+            return None
+        return self.model[sensors]
+
+    # returns the sensors tuple for a state
+    def sensors_for_state(self, state):
+        for k, v in self.model.items():
+            if v == state:
+                return k
+        raise Exception('SensorModel.sensors: state not found - ' + state)
+
 
 
 #

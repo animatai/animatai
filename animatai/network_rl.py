@@ -49,56 +49,16 @@ l = Logging('network_rl', DEBUG_MODE)
 # - init is the initial state of the sensors
 #
 
-#
-# SensorModel
-# -----------
-#
-# Holds a model mapping sensors to states: {(s1,..., sn): 'state'}
-#
-# It is possible to create sensors from a mdp. One sensor is created for each
-# state. This is mainly used in simple examples/testing.
-#
+# Use like this: SensorModel({frozenset([0]): state, ...})
+class SensorModel(dict):
+    def __init__(self, *args):
+        super().__init__(*args)
 
-def mdp_to_simple_sensor_model(mdp):
-    # One sensor for each state in the MDP
-    sensor_template = [False] * len(mdp.states)
-    i = 0
-    model = {}
-    for state in sorted(mdp.states):
-        sensor = list(sensor_template)
-        sensor[i] = True
-        i += 1
-        model[tuple(sensor)] = state
-    return model
-
-# sensors = [('sensor name', Thing to recognise)]
-# model   = {(s1:bool,...,sn:bool): 'state'} maps sensor tuples to states (for readability)
-class SensorModel:
-    # pylint: disable=too-few-public-methods
-    def __init__(self, sensors, model=None, mdp=None):
-        self.sensors = sensors
-        if model and mdp:
-            raise Exception('Both model and mdp should not be used!')
-        if model:
-            self.model = model
-        if mdp:
-            self.model = mdp_to_simple_sensor_model(mdp)
-
-    def __repr__(self):
-        return 'SensorModel:' + str(self.model)
-
-    # return the state for a tuple of sensors
-    def __call__(self, sensors):
-        if not sensors:
+    def __call__(self, key):
+        if key in self:
+            return self.get(key)
+        else:
             return None
-        return self.model[sensors]
-
-    # returns the sensors tuple for a state
-    def sensors_for_state(self, state):
-        for k, v in self.model.items():
-            if v == state:
-                return k
-        raise Exception('SensorModel.sensors: state not found - ' + state)
 
 
 # Use like this: MotorModel({north: '^', south: 'v', east: '>', west: '<', '*': '-'})
