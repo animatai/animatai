@@ -383,7 +383,7 @@ class MotorNetwork(Network):
     def update(self, percept):
         # pylint disable=arguments-differ
         for idx in range(0, len(self.state)):
-            self.state[idx] = idx in percept
+            self.state[idx] = idx in percept if percept else False
         for node in self.root_nodes:
             self.update_node(node, None)
         return self.get_action()
