@@ -186,7 +186,7 @@ class Environment:
     # override this method.
     def step(self, time):
         if not self.is_done():
-            l.info('--- STEP:',time,'---')
+            l.info('--- STEP:', time, '---')
             actions, actions1, rewards = self.actions, [], [{}]*len(self.agents) #[0]*len(self.agents)
 
             # use rewards for previous actions

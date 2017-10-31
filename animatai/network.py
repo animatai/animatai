@@ -273,7 +273,7 @@ class Network:
 
     def update_NEEDs(self, rewards):
         for objective, reward in rewards.items():
-            self.needs[objective] += rewards[objective]
+            self.needs[objective] += reward
             self.needs[objective] = min(self.needs_initial[objective], self.needs[objective])
 
     def delete_nodes(self, indexes):

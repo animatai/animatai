@@ -51,28 +51,20 @@ l = Logging('network_rl', DEBUG_MODE)
 
 # Use like this: SensorModel({frozenset([0]): state, ...})
 class NetworkModel(dict):
-    def __init__(self, *args):
-        super().__init__(*args)
-
     def __call__(self, key):
         if key in self:
             return self.get(key)
-        else:
-            return key
+        return key
 
 
 # Use like this: MotorModel({north: '^', south: 'v', east: '>', west: '<', '*': '-'})
 class MotorModel(dict):
-    def __init__(self, *args):
-        super().__init__(*args)
-
     def __call__(self, key):
         if key in self:
             return self.get(key)
         elif '*' in self:
             return self.get('*')
-        else:
-            return key
+        return key
 
     def all_actions(self):
         res = list(self.keys())
@@ -282,7 +274,7 @@ class NetworkQLearningAgent(NetworkAgent):
         res = ''
         for status in self.ndp.statuses:
             lst = [(self.ndp.sensor_model(k[0]),
-                           self.ndp.motor_model(k[1]), v) for k, v in self.Q[status].items()]
+                    self.ndp.motor_model(k[1]), v) for k, v in self.Q[status].items()]
             #lst = sorted(lst, key=lambda x: x and x[0])
             lst = list(filter(lambda x: x[2] != 0.0, lst))
             res += status + ':' + str(lst)
