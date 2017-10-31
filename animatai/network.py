@@ -185,7 +185,7 @@ class Network:
             node.last_res = None
         for node in self.root_nodes:
             self.update_node(node, percepts)
-        return self.get()
+        return (self.get(), rewards)
 
     def update_node(self, node, percept):
         idx = self.nodes.index(node)

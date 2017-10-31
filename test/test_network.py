@@ -8,7 +8,7 @@
 # ======
 
 import unittest
-from gzutils.gzutils import Logging
+from gzutils.gzutils import Logging, unpack
 from animatai.agents import Thing
 from animatai.network import Network, MotorNetwork
 
@@ -18,6 +18,7 @@ from animatai.network import Network, MotorNetwork
 
 DEBUG_MODE = True
 l = Logging('test_network', DEBUG_MODE)
+unpack0 = unpack(0)
 
 
 class Thing1(Thing):
@@ -131,37 +132,37 @@ class TestNetwork(unittest.TestCase):
         n2T = network.add_ONE_node(n2, [n1, n2, n3])
         n3T = network.add_ONE_node(n3, [n1, n2, n3])
 
-        self.assertTrue(network.update(([(Thing1(), 1.0)], {})) - set([n1]) == set([n1T]))
-        self.assertTrue(network.update(([(Thing2(), 1.0)], {})) - set([n2]) == set([n2T]))
-        self.assertTrue(network.update(([(Thing3(), 1.0)], {})) - set([n3]) == set([n3T]))
-        self.assertTrue(network.update(([(Thing1(), 1.0), (Thing2(), 1.0)], {})) -
+        self.assertTrue(unpack0(network.update(([(Thing1(), 1.0)], {}))) - set([n1]) == set([n1T]))
+        self.assertTrue(unpack0(network.update(([(Thing2(), 1.0)], {}))) - set([n2]) == set([n2T]))
+        self.assertTrue(unpack0(network.update(([(Thing3(), 1.0)], {}))) - set([n3]) == set([n3T]))
+        self.assertTrue(unpack0(network.update(([(Thing1(), 1.0), (Thing2(), 1.0)], {}))) -
                         set([n1, n2]) == set())
-        self.assertTrue(network.update(([(Thing1(), 1.0), (Thing2(), 1.0), (Thing3(), 1.0)], {})) -
+        self.assertTrue(unpack0(network.update(([(Thing1(), 1.0), (Thing2(), 1.0), (Thing3(), 1.0)], {}))) -
                         set([n1, n2, n3]) == set())
-        self.assertTrue(network.update(([], {})) == set())
+        self.assertTrue(unpack0(network.update(([], {}))) == set())
 
         m1 = network.add_MIN_node(1, [n1, n2, n3])
         m2 = network.add_MIN_node(2, [n1, n2, n3])
         m3 = network.add_MIN_node(3, [n1, n2, n3])
 
-        vs = network.update(([(Thing3(), 1.0)], {}))
+        vs = unpack0(network.update(([(Thing3(), 1.0)], {})))
         self.assertTrue(m1 in vs and not m2 in vs and not m3 in vs)
-        vs = network.update(([(Thing1(), 1.0), (Thing2(), 1.0)], {}))
+        vs = unpack0(network.update(([(Thing1(), 1.0), (Thing2(), 1.0)], {})))
         self.assertTrue(m2 in vs and m1 in vs and not m3 in vs)
-        vs = network.update(([(Thing1(), 1.0), (Thing2(), 1.0), (Thing3(), 1.0)], {}))
+        vs = unpack0(network.update(([(Thing1(), 1.0), (Thing2(), 1.0), (Thing3(), 1.0)], {})))
         self.assertTrue(m3 in vs and  m2 in vs and  m1 in vs)
 
         m1 = network.add_MAX_node(1, [n1, n2, n3])
         m2 = network.add_MAX_node(2, [n1, n2, n3])
         m3 = network.add_MAX_node(3, [n1, n2, n3])
 
-        vs = network.update(([], {}))
+        vs = unpack0(network.update(([], {})))
         self.assertTrue(m1 in vs and m2 in vs and  m3 in vs)
-        vs = network.update(([(Thing3(), 1.0)], {}))
+        vs = unpack0(network.update(([(Thing3(), 1.0)], {})))
         self.assertTrue(m1 in vs and m2 in vs and  m3 in vs)
-        vs = network.update(([(Thing1(), 1.0), (Thing2(), 1.0)], {}))
+        vs = unpack0(network.update(([(Thing1(), 1.0), (Thing2(), 1.0)], {})))
         self.assertTrue(m2 in vs and not m1 in vs and m3 in vs)
-        vs = network.update(([(Thing1(), 1.0), (Thing2(), 1.0), (Thing3(), 1.0)], {}))
+        vs = unpack0(network.update(([(Thing1(), 1.0), (Thing2(), 1.0), (Thing3(), 1.0)], {})))
         self.assertTrue(m3 in vs and not m2 in vs and not m1 in vs)
 
         # NOTE: Need to be manually checked
@@ -184,7 +185,7 @@ class TestNetwork(unittest.TestCase):
         S = N.state
         for i in range(0, 100):
             percept = ([(Thing1(), 1.0)] if i % 2 else [], {})
-            vs = N.update(percept)
+            vs = unpack0(N.update(percept))
             self.assertTrue(S[t1] == (not S[r1] and not S[r2]))
             self.assertTrue(S[t2] == (not S[r2] and not S[r3]))
             self.assertTrue(S[t3] == (S[r3] and S[t1]))
@@ -204,8 +205,8 @@ class TestNetwork(unittest.TestCase):
     def test_named_SENSOR(self):
         network = Network()
         n1 = network.add_SENSOR_node(Thing1, 'one')
-        self.assertTrue(network.update(([(Thing1('two'), 1.0)], {})) == set())
-        self.assertTrue(network.update(([(Thing1('one'), 1.0)], {})) == set([n1]))
+        self.assertTrue(unpack0(network.update(([(Thing1('two'), 1.0)], {}))) == set())
+        self.assertTrue(unpack0(network.update(([(Thing1('one'), 1.0)], {}))) == set([n1]))
 
 
 class TestMotorNetwork(unittest.TestCase):
