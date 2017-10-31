@@ -13,7 +13,7 @@ import unittest
 from gzutils.gzutils import Logging, get_output_dir, save_csv_file
 
 from animatai.mdp import MDP
-from animatai.network_rl import MotorModel, SensorModel, NetworkDP, NetworkQLearningAgent
+from animatai.network_rl import SensorModel, NetworkDP, NetworkQLearningAgent
 
 # Setup logging
 # =============
@@ -156,6 +156,65 @@ def run_single_trial(agent_program, mdp, sensor_model, motor_model):
 #              ',next_network_action:', next_network_action
 #                )
         current_state = take_single_action(mdp, current_state, next_action)
+
+
+#
+# MotorModel - generates all possible actions
+# ----------
+#
+# motors - list of motors represented with string ['m1',...,'mn']
+# model - maps tuples of motors (bool,...,bool) to actions in the Environemtn used:
+#        [ ((m1:bool,m2:bool,...,mn:bool), 'action'),...,('*', 'default_actiom') ]
+#        The default action is used when a combination of active motors do not
+#        result in any action in the environment
+#
+def find_in_list_with_tuples(key, default_key, idx, lst):
+    r = list(filter(lambda x: x[idx] == key, lst))
+    if not r:
+        r = list(filter(lambda x: x[idx] == default_key, lst))
+    return r
+
+class MotorModel:
+    # pylint: disable=too-few-public-methods
+    def __init__(self, motors, model):
+        self.model = model
+        self.motors = motors
+
+    # returns the action for a motors tuple
+    def __call__(self, motors):
+        if not motors:
+            return None
+        act = find_in_list_with_tuples(motors, '*', 0, self.model)
+        if act:
+            return act[0][1]
+        return None
+
+    def __repr__(self):
+        return 'MotorModel:' + str(self.model)
+
+    #
+    # motors=[m1,m2,...,mn] actions=[(m1=T/F,m2=T/F,...,mn=T/F)]
+    # actions are tuples where each motor is represented by one position with a
+    # boolean indicating if it is active.
+    #
+    # Generate all possible actions from a list of motors (2^n combinations)
+    # [m1,m2,...,mn] -> [(F,F,...,F),...,(T,T,...,T])]
+    def all_actions(self):
+        def ext(e, lst):
+            for v in lst:
+                v.insert(0, e)
+
+        def actions_(motors):
+            if len(motors) == 1:
+                return [[True], [False]]
+            a = actions_(motors[1:])
+            ext(False, a)
+            b = actions_(motors[1:])
+            ext(True, b)
+            a.extend(b)
+            return a
+
+        return list(map(tuple, actions_(self.motors)))
 
 
 class TestNetworkRL(unittest.TestCase):
