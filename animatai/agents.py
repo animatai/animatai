@@ -445,11 +445,12 @@ class XYEnvironment(Environment):
         # return 1 for test purposes for agents without objectives or rewards
         if ('objectives' not in self.options  or
                 'rewards' not in self.options):
+            l.info('calc_performance:objectives or rewards not configured.')
             return 1
 
         rewards = {}
         for rewarded_action, object_and_objectives in self.options.rewards.items():
-            if action == rewarded_action:
+            if action == rewarded_action or rewarded_action is None:
                 for rewarded_thing, obj_and_reward in object_and_objectives.items():
                     if (rewarded_thing and
                             len(self.list_things_at(agent.location, rewarded_thing))):
