@@ -42,15 +42,15 @@ l = Logging('network_rl', DEBUG_MODE)
 
 #
 # A variant of a MDP where:
-# - actions are generated from motors - (m1:bool, m2:bool, ..., mn:bool)
-# - states are represented with sensors - (s1:bool, s2:bool, ..., sn:bool)
+# - actions are generated from active motors - frozenset([m0,...,mn])
+# - states are represented with active network nodes - frozenset([s1,..., sn])
 # - statuses are used instead of terminal states. Any status less than or equal
 #   to zero is equivalent to a terminal state - [(name, float)]
 # - init is the initial state of the sensors
 #
 
 # Use like this: SensorModel({frozenset([0]): state, ...})
-class SensorModel(dict):
+class NetworkModel(dict):
     def __init__(self, *args):
         super().__init__(*args)
 
