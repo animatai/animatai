@@ -375,7 +375,9 @@ class MotorNetwork(Network):
                 ', motors:' + str(self.motors))
 
     def motors_for_all_actions(self):
-        return list(self.motors_to_action.keys())
+        res = list(self.motors_to_action.keys())
+        res.remove('*')
+        return res
 
     # indexes is a set with the indexes of the nodes that should be True
     def update(self, percept):
