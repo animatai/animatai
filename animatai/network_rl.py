@@ -58,7 +58,7 @@ class NetworkModel(dict):
         if key in self:
             return self.get(key)
         else:
-            return None
+            return key
 
 
 # Use like this: MotorModel({north: '^', south: 'v', east: '>', west: '<', '*': '-'})
@@ -72,11 +72,12 @@ class MotorModel(dict):
         elif '*' in self:
             return self.get('*')
         else:
-            return None
+            return key
 
     def all_actions(self):
         res = list(self.keys())
-        res.remove('*')
+        if '*' in res:
+            res.remove('*')
         return res
 
 
@@ -183,7 +184,10 @@ class NetworkAgent(Agent):
     # keep count of the number of iterations and check if the limit is reached
     def check_iterations(self):
         self.iterations += 1
-        return self.max_iterations and self.iterations >= self.max_iterations
+        res = self.max_iterations and self.iterations >= self.max_iterations
+        if res:
+            l.info('--- MAXIMUIM NUMBER OF ITERATIONS REACHED ---')
+        return res
 
     # Check if status is zero or less and keep track of number of
     # iterations and stop after some limit has been reached
@@ -277,9 +281,9 @@ class NetworkQLearningAgent(NetworkAgent):
     def __repr__(self):
         res = ''
         for status in self.ndp.statuses:
-            lst = sorted([(self.ndp.sensor_model(k[0]) if k[0] else 'None',
-                           self.ndp.motor_model(k[1]), v) for k, v in self.Q[status].items()],
-                         key=lambda x: x and x[0])
+            lst = [(self.ndp.sensor_model(k[0]),
+                           self.ndp.motor_model(k[1]), v) for k, v in self.Q[status].items()]
+            #lst = sorted(lst, key=lambda x: x and x[0])
             lst = list(filter(lambda x: x[2] != 0.0, lst))
             res += status + ':' + str(lst)
         return ('Q:' + res  +

@@ -186,6 +186,7 @@ class Environment:
     # override this method.
     def step(self, time):
         if not self.is_done():
+            l.info('--- STEP:',time,'---')
             actions, actions1, rewards = self.actions, [], [{}]*len(self.agents) #[0]*len(self.agents)
 
             # use rewards for previous actions
@@ -208,13 +209,14 @@ class Environment:
             rewards = []
             for (agent, action1) in zip(self.agents, actions1):
                 rewards.append(self.calc_performance(agent, action1))
-                self.execute_action(agent, action1, time)
 
                 l.info(agent.__name__, 'alive:', agent.alive,
                        ', location:', agent.location,
                        ', action:', action1,
                        ', status:', agent.status if hasattr(agent, 'status') else None,
                        ', rewards to be applied in next step:', rewards)
+
+                self.execute_action(agent, action1, time)
 
             self.actions = actions1
             self.rewards = rewards
@@ -475,6 +477,7 @@ class XYEnvironment(Environment):
             for x in range(0, width):
                 class_ = self.envcode2class(env[y][x])
                 if class_:
+                    l.info('add_things:', class_, self.thing_counter)
                     self.add_thing(class_(str(self.thing_counter)), (x, y))
                     self.thing_counter += 1
 
