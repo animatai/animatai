@@ -23,6 +23,7 @@
 # =======
 
 import math
+import random
 
 from collections import defaultdict
 from gzutils.gzutils import DefaultDict, Logging
@@ -135,9 +136,11 @@ class NetworkDP:
 # Keeps track of the history of actions performed
 class NetworkAgent(Agent):
     # pylint: disable=too-many-instance-attributes
-    def __init__(self, program=None, name='nonname', ndp=None, max_iterations=None):
+    def __init__(self, program=None, name='nonname', ndp=None, max_iterations=None,
+                 calc_status=False):
 
         self.program = program or self
+        self.calc_status = calc_status
 
         self.ndp = ndp
         self.all_act = ndp.actlist
@@ -196,7 +199,7 @@ class NetworkAgent(Agent):
     def update_statuses(self):
         s, a, r = self.s, self.a, self.r
         motor_model, network_model, statuses = (self.ndp.motor_model, self.ndp.network_model,
-                                               self.ndp.statuses)
+                                                self.ndp.statuses)
 
         # save history for statuses, state, action, reward
         if motor_model:
@@ -209,7 +212,9 @@ class NetworkAgent(Agent):
         for status in self.ndp.statuses:
             self.status_history[status].append(r[status])
 
-        self.ndp.update_statuses(s, a, r)
+        if self.calc_status:
+            self.ndp.update_statuses(s, a, r)
+
         self.ps, self.pa, self.pr = s, a, dict(r)
 
     # to be used after the __call__ function
@@ -248,33 +253,38 @@ class NetworkAgent(Agent):
 #
 # Implements multi-dimensional Q-learning using the NetworkDP class instead of a MDP.
 #
+# Ne >= 1: f (exploration function) returns Rplus until each (state, action) has been tested Ne number of times
+# Ne < 1: f (exploration function) explores with probability epsilon
 class NetworkQLearningAgent(NetworkAgent):
     # pylint: disable=too-many-instance-attributes, too-many-arguments
-    def __init__(self, ndp, Ne, Rplus, alpha=None, delta=0.5, max_iterations=None, name='noname'):
+    def __init__(self, ndp, Ne, Rplus, alpha=None, delta=0.5, epsilon=0.3,
+                 max_iterations=None, name='noname', calc_status=False):
 
         # Multidimensional Q: Q_status[s, a]
         self.Q = {}
         for status in ndp.statuses:
-            self.Q[status] = DefaultDict(0.0 )#defaultdict(float)
+            self.Q[status] = DefaultDict(0.0)
 
         self.Ne = Ne                      # iteration limit in exploration function
         self.Nsa = defaultdict(float)
         self.delta = delta
         self.Rplus = Rplus                # large value to assign before iteration limit
         self.gamma = ndp.gamma
+        self.epsilon = epsilon
 
         if alpha:
             self.alpha = alpha
         else:
             self.alpha = lambda n: 1./(1+n)  # udacity video
 
-        super().__init__(None, name, ndp, max_iterations)
+        super().__init__(None, name, ndp, max_iterations, calc_status)
 
     def __repr__(self):
         res = ''
         for status in self.ndp.statuses:
             lst = [(self.ndp.network_model(k[0]),
-                    self.ndp.motor_model(k[1]), '{0:.3f}'.format(v)) for k, v in self.Q[status].items()]
+                    self.ndp.motor_model(k[1]), '{0:.3f}'.format(v))
+                   for k, v in self.Q[status].items()]
             #lst = sorted(lst, key=lambda x: x and x[0])
             res += status + ':' + str(lst)
         return ('Q:' + res  +
@@ -305,11 +315,13 @@ class NetworkQLearningAgent(NetworkAgent):
         return self.in_terminal
 
     # Exploration function. Returns fixed Rplus untill agent has visited state,
-    # action a Ne number of times.
+    # action a Ne number of times or explores randomly with probability epsilon
     def f(self, u, n):
-        if n < self.Ne:
+        if (self.Ne >= 1 and n < self.Ne) or random.random() <= self.epsilon:
             return self.Rplus
         return u
+
+
 
     def visited_states(self):
         return sorted(set(map(lambda x: x[0], list(self.Q))))
@@ -350,8 +362,8 @@ class NetworkQLearningAgent(NetworkAgent):
             # original version
             # self.a = argmax(actions_in_state(s1),
             #                 key=lambda a1: self.f(Q[objective][(s1, a1)], Nsa[s1, a1]))
-
-            self.ndp.update_statuses(self.s, self.a, self.r)
+            if self.calc_status:
+                self.ndp.update_statuses(self.s, self.a, self.r)
         return self.a
 
 

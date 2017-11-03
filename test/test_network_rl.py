@@ -129,8 +129,8 @@ def print_q_agent(q_agent):
         l.debug('iteration:', q_agent.iterations, ' ----- ' + objective + '------ ')
         U, pi = q_agent.Q_to_U_and_pi()[objective]
 
-        U = {k: U[k] if k in U else ' ' for k in TRANSITION_MODEL.keys()}
-        pi = {k: pi[k] if k in pi else ' ' for k in TRANSITION_MODEL.keys()}
+        U = {k: U[k] if k in U else ' ' for k in TRANSITION_MODEL}
+        pi = {k: pi[k] if k in pi else ' ' for k in TRANSITION_MODEL}
 
         # print the utilities and the policy also
         U1 = sorted(U.items(), key=lambda x: x[0])
@@ -158,11 +158,11 @@ def run_single_trial(q_agent, mdp, sensor_model, motor_model, print_steps=False)
         percept = (sensor_model.sensors_for_state(current_state), current_reward)
         next_network_action = q_agent(percept)
         l.debug('current_state:', current_state,
-              ',current_reward:', current_reward,
-              ',next_action:', next_action,
-              ',percept:', percept,
-              ',next_network_action:', next_network_action
-                )
+                ',current_reward:', current_reward,
+                ',next_action:', next_action,
+                ',percept:', percept,
+                ',next_network_action:', next_network_action
+               )
         l.debug('q_agent:', q_agent)
         if next_network_action is None:
             break
@@ -350,7 +350,8 @@ class TestNetworkRL(unittest.TestCase):
             q_agent = NetworkQLearningAgent(self.ndp, Ne=5, Rplus=2,
                                             alpha=lambda n: 60./(59+n),
                                             delta=0.5,
-                                            max_iterations=100)
+                                            max_iterations=100,
+                                            calc_status=True)
             q_agent.reset()
 
             run_single_trial(q_agent, self.test_mdp, self.sensor_model, self.motor_model,
@@ -377,9 +378,10 @@ class TestNetworkRL(unittest.TestCase):
         q_agent = NetworkQLearningAgent(self.ndp, Ne=5, Rplus=2,
                                         alpha=lambda n: 60./(59+n),
                                         delta=0.5,
-                                        max_iterations=100)
+                                        max_iterations=100,
+                                        calc_status=True)
 
-        for i in range(3):
+        for i in range(100):
             l.debug('**** TRIAL: ', i, ' ****')
             q_agent.reset()
             run_single_trial(q_agent, self.test_mdp, self.sensor_model, self.motor_model,
@@ -412,7 +414,8 @@ class TestNetworkRL(unittest.TestCase):
         q_agent = NetworkQLearningAgent(self.multi_dim_ndp, Ne=5, Rplus=2,
                                         alpha=lambda n: 60./(59+n),
                                         delta=0.5,
-                                        max_iterations=100)
+                                        max_iterations=100,
+                                        calc_status=True)
 
         for _ in range(101):
             q_agent.reset()
