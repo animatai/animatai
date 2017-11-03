@@ -21,7 +21,7 @@ from animatai.network_rl import NetworkDP, NetworkQLearningAgent
 random.seed(1)
 
 OUTPUT_DIR = get_output_dir()
-DEBUG_MODE = True
+DEBUG_MODE = False
 l = Logging('test_network_rl', DEBUG_MODE)
 
 
@@ -354,7 +354,7 @@ class TestNetworkRL(unittest.TestCase):
             q_agent.reset()
 
             run_single_trial(q_agent, self.test_mdp, self.sensor_model, self.motor_model,
-                             True)
+                             DEBUG_MODE)
 
 
     def test_networkQLearnigAgent(self):

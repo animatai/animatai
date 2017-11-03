@@ -274,7 +274,7 @@ class NetworkQLearningAgent(NetworkAgent):
         res = ''
         for status in self.ndp.statuses:
             lst = [(self.ndp.network_model(k[0]),
-                    self.ndp.motor_model(k[1]), v) for k, v in self.Q[status].items()]
+                    self.ndp.motor_model(k[1]), '{0:.3f}'.format(v)) for k, v in self.Q[status].items()]
             #lst = sorted(lst, key=lambda x: x and x[0])
             res += status + ':' + str(lst)
         return ('Q:' + res  +
