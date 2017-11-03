@@ -119,17 +119,27 @@ MULTI_DIM_REWARD_MODEL = [('*', '*', 'd', {'energy': 0.5, 'water': -0.5}),
 # Test
 # ====
 
-def print_gridU(U):
+def print_grid(U):
     l.info(U[0:4])
     l.info(U[4:7])
     l.info(U[7:11])
 
-def print_gridPi(pi):
-    l.info(pi[0:4])
-    l.info(pi[4:7])
-    l.info(pi[7:11])
+def print_q_agent(q_agent):
+    for objective in q_agent.ndp.statuses:
+        l.debug('iteration:', q_agent.iterations, ' ----- ' + objective + '------ ')
+        U, pi = q_agent.Q_to_U_and_pi()[objective]
 
-def run_single_trial(agent_program, mdp, sensor_model, motor_model):
+        U = {k: U[k] if k in U else ' ' for k in TRANSITION_MODEL.keys()}
+        pi = {k: pi[k] if k in pi else ' ' for k in TRANSITION_MODEL.keys()}
+
+        # print the utilities and the policy also
+        U1 = sorted(U.items(), key=lambda x: x[0])
+        pi1 = sorted(pi.items(), key=lambda x: x[0])
+        print_grid(U1)
+        print_grid(pi1)
+
+
+def run_single_trial(q_agent, mdp, sensor_model, motor_model, print_steps=False):
     def take_single_action(mdp, s, a):
         x = random.uniform(0, 1)
         cumulative_probability = 0.0
@@ -142,20 +152,24 @@ def run_single_trial(agent_program, mdp, sensor_model, motor_model):
         return state
 
     current_state = mdp.init
+    next_action = None
     while True:
         current_reward = mdp.R(current_state)
         percept = (sensor_model.sensors_for_state(current_state), current_reward)
-        next_network_action = agent_program(percept)
+        next_network_action = q_agent(percept)
+        l.debug('current_state:', current_state,
+              ',current_reward:', current_reward,
+              ',next_action:', next_action,
+              ',percept:', percept,
+              ',next_network_action:', next_network_action
+                )
+        l.debug('q_agent:', q_agent)
         if next_network_action is None:
             break
         next_action = motor_model(next_network_action)
-#        l.debug('current_state:', current_state,
-#              ',current_reward:', current_reward,
-#              ',next_action:', next_action,
-#              ',percept:', percept,
-#              ',next_network_action:', next_network_action
-#                )
         current_state = take_single_action(mdp, current_state, next_action)
+        if print_steps:
+            print_q_agent(q_agent)
 
 #
 # SensorModel
@@ -330,6 +344,18 @@ class TestNetworkRL(unittest.TestCase):
     def tearDown(self):
         l.info('...done with test_network_rl.')
 
+    def test_networkQLearnigAgentPrintDetails(self):
+        for i in range(100):
+            l.debug('**** TRIAL: ', i, ' ****')
+            q_agent = NetworkQLearningAgent(self.ndp, Ne=5, Rplus=2,
+                                            alpha=lambda n: 60./(59+n),
+                                            delta=0.5,
+                                            max_iterations=100)
+            q_agent.reset()
+
+            run_single_trial(q_agent, self.test_mdp, self.sensor_model, self.motor_model,
+                             True)
+
 
     def test_networkQLearnigAgent(self):
         # pylint: disable=line-too-long
@@ -353,20 +379,26 @@ class TestNetworkRL(unittest.TestCase):
                                         delta=0.5,
                                         max_iterations=100)
 
-        for _ in range(200):
+        for i in range(3):
+            l.debug('**** TRIAL: ', i, ' ****')
             q_agent.reset()
-            run_single_trial(q_agent, self.test_mdp, self.sensor_model, self.motor_model)
+            run_single_trial(q_agent, self.test_mdp, self.sensor_model, self.motor_model,
+                             DEBUG_MODE)
 
         U, pi = q_agent.Q_to_U_and_pi()['energy']
-
-        l.debug(U, pi)
-        save_csv_file('one_dim.csv', [self.ndp.history], self.ndp.history_headers, OUTPUT_DIR)
 
         # print the utilities and the policy also
         U1 = sorted(U.items(), key=lambda x: x[0])
         pi1 = sorted(pi.items(), key=lambda x: x[0])
-        print_gridU(U1)
-        print_gridPi(pi1)
+        l.debug('------------------')
+        print_grid(U1)
+        print_grid(pi1)
+
+        l.debug('AAA', U, U1)
+        l.debug('BBB', pi, pi1)
+        l.debug('CCC', q_agent)
+        save_csv_file('one_dim.csv', [self.ndp.history], self.ndp.history_headers, OUTPUT_DIR)
+
 
         # check utilities and policy
         # TODO: Seams difficult to get the samt result at each run. Probably due to tests running in parallel
@@ -382,7 +414,7 @@ class TestNetworkRL(unittest.TestCase):
                                         delta=0.5,
                                         max_iterations=100)
 
-        for _ in range(400):
+        for _ in range(101):
             q_agent.reset()
             run_single_trial(q_agent, self.test_multi_dim_mdp, self.sensor_model, self.motor_model)
 
@@ -393,8 +425,8 @@ class TestNetworkRL(unittest.TestCase):
             # print the utilities and the policy also
             U1 = sorted(U.items(), key=lambda x: x[0])
             pi1 = sorted(pi.items(), key=lambda x: x[0])
-            print_gridU(U1)
-            print_gridPi(pi1)
+            print_grid(U1)
+            print_grid(pi1)
 
         save_csv_file('two_dim.csv', [self.multi_dim_ndp.history], self.ndp.history_headers, OUTPUT_DIR)
         l.debug('test_multiDimNetworkQLearnigAgent:', self.multi_dim_ndp.statuses)

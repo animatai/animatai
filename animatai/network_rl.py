@@ -25,7 +25,7 @@
 import math
 
 from collections import defaultdict
-from gzutils.gzutils import Logging
+from gzutils.gzutils import DefaultDict, Logging
 
 from .agents import Agent
 
@@ -49,7 +49,7 @@ l = Logging('network_rl', DEBUG_MODE)
 # - init is the initial state of the sensors
 #
 
-# Use like this: SensorModel({frozenset([0]): state, ...})
+# Use like this: NetworkModel({frozenset([0]): state, ...})
 class NetworkModel(dict):
     def __call__(self, key):
         if key in self:
@@ -82,18 +82,18 @@ class MotorModel(dict):
 # sensors and motors (data structure classes).
 #
 # init         = (s1_init, ..., sn_init) - initial state of sensors
-# statuses     = {name1: init_value,..., name_n: init_value}
+# statuses     = {name1: init_value,..., name_n: init_value} - SHOULD BE THE STATUSES IN THE NETWORK
 # motor_model  = {(m1:bool,m2:bool,...,mn:bool): 'action name', '*': 'default_action'}
-# sensor_model = {(s1:bool, s2:bool, ..., sn:bool): 'state name' } (Optional)
+# network_model = {(s1:bool, s2:bool, ..., sn:bool): 'state name' } (Optional)
 #
 class NetworkDP:
     # pylint: disable=too-many-arguments, too-many-instance-attributes
-    def __init__(self, init, statuses, motor_model, gamma=.9, sensor_model=None):
+    def __init__(self, init, statuses, motor_model, gamma=.9, network_model=None):
         self.init = init
         self.gamma = gamma
         self.statuses = statuses
         self.motor_model = motor_model
-        self.sensor_model = sensor_model
+        self.network_model = network_model
         self.init_statuses = dict(statuses)
         self.actlist = motor_model.all_actions()
 
@@ -104,12 +104,12 @@ class NetworkDP:
     def __repr__(self):
         return ('gamma=' + str(self.gamma) + '\n' +
                 'init=' + str(self.init) +
-                ('(' + self.sensor_model(self.init) if self.sensor_model else '') + ')\n' +
-                'sensors=' + str(self.sensor_model.sensors) + '\n' +
+                ('(' + self.network_model(self.init) if self.network_model else '') + ')\n' +
+                #'sensors=' + str(self.network_model.sensors) + '\n' +
                 'statuses=' + str(self.statuses) + '\n' +
                 'motors=' + str(self.motor_model.motors) + '\n' +
                 'motor_model=' + str(self.motor_model) + '\n' +
-                'sensor_model=' + str(self.sensor_model) + '\n' +
+                'network_model=' + str(self.network_model) + '\n' +
                 'actlist=' + str(self.actlist) + '\n' +
                 'actions (using motor_model)=' +
                 str([self.motor_model(act) for act in self.actlist]) + '\n' +
@@ -118,8 +118,8 @@ class NetworkDP:
     def update_statuses(self, state, action, rewards):
         if self.motor_model:
             action = self.motor_model(action)
-        if self.sensor_model:
-            state = self.sensor_model(state)
+        if self.network_model:
+            state = self.network_model(state)
         self.history.append((list(self.statuses.values()), state, action, list(rewards.values())))
 
         for k, v in rewards.items():
@@ -195,14 +195,14 @@ class NetworkAgent(Agent):
     # update the status after the action has been perfomred and the new state reached
     def update_statuses(self):
         s, a, r = self.s, self.a, self.r
-        motor_model, sensor_model, statuses = (self.ndp.motor_model, self.ndp.sensor_model,
+        motor_model, network_model, statuses = (self.ndp.motor_model, self.ndp.network_model,
                                                self.ndp.statuses)
 
         # save history for statuses, state, action, reward
         if motor_model:
             a = motor_model(a)
-        if sensor_model:
-            s = sensor_model(s)
+        if network_model:
+            s = network_model(s)
         self.history.append((list(statuses.values()), s, a, list(r.values())))
 
         # save status history
@@ -255,7 +255,7 @@ class NetworkQLearningAgent(NetworkAgent):
         # Multidimensional Q: Q_status[s, a]
         self.Q = {}
         for status in ndp.statuses:
-            self.Q[status] = defaultdict(float)
+            self.Q[status] = DefaultDict(0.0 )#defaultdict(float)
 
         self.Ne = Ne                      # iteration limit in exploration function
         self.Nsa = defaultdict(float)
@@ -273,10 +273,10 @@ class NetworkQLearningAgent(NetworkAgent):
     def __repr__(self):
         res = ''
         for status in self.ndp.statuses:
-            lst = [(self.ndp.sensor_model(k[0]),
+            lst = [(self.ndp.network_model(k[0]),
                     self.ndp.motor_model(k[1]), v) for k, v in self.Q[status].items()]
-            #lst = sorted(lst, key=lambda x: x and x[0])
-            lst = list(filter(lambda x: x[2] != 0.0, lst))
+            lst = sorted(lst, key=lambda x: x and x[0])
+            #lst = list(filter(lambda x: x[2] != 0.0, lst))
             res += status + ':' + str(lst)
         return ('Q:' + res  +
                 ',statuses:' + str(self.ndp.statuses) +
@@ -293,8 +293,8 @@ class NetworkQLearningAgent(NetworkAgent):
                 if U[state] < value:
                     U[state] = value
                     pi[state] = action
-            U = dict(map(lambda x: (self.ndp.sensor_model(x[0]), x[1]), U.items()))
-            pi = dict(map(lambda x: (self.ndp.sensor_model(x[0]),
+            U = dict(map(lambda x: (self.ndp.network_model(x[0]), x[1]), U.items()))
+            pi = dict(map(lambda x: (self.ndp.network_model(x[0]),
                                      self.ndp.motor_model(x[1])), pi.items()))
             res[status] = U, pi
         return res
