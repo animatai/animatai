@@ -1,0 +1,1 @@
+Search.setIndex({docnames:["index"],envversion:53,filenames:["index.rst"],objects:{},objnames:{},objtypes:{},terms:{artifici:0,gener:0,index:[],intellig:0,modul:[],page:[],search:[]},titles:["AnimatAI"],titleterms:{animatai:0,document:[],indic:[],sbx:[],sphinx:[],tabl:[],welcom:[]}})

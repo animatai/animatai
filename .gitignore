@@ -1,6 +1,6 @@
 .DS_Store
 venv*
-docs
+doc
 *.pyc
 *.csv
 output
