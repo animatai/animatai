@@ -120,8 +120,8 @@ html_sidebars = {
 # -- Options for HTMLHelp output ------------------------------------------
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'Sphinx-sbxdoc'
-
+htmlhelp_basename = 'AnimatAI'
+html_use_index = False
 
 # -- Options for LaTeX output ---------------------------------------------
 

@@ -7,4 +7,30 @@
 AnimatAI
 =========
 
-Artificial General Intelligence...
+AnimatAI is a framework for Articifial General Intelligence developed in Python
+by Jonas Colmsjö and Claes Strannegård. It is open source and is available at `github.com/animatai`_.
+
+The theory behind the framework is described in:
+
+A General Model for Learning and Decision-Making in Artificial Animals by Claes Strannegård, Nils Svangård, David Lindström, Joscha Bach and Bas Steunebrink
+
+Submitted to IJCAI-17 AGA workshop, Melbourne, Australia
+
+
+
+Getting started
+---------------
+
+Install the framework with: `pip install animatai`
+
+Check out the examples_ to see how the classes are used.
+
+
+
+.. _`github.com/animatai`: https://github.com/animatai/animatai
+.. _examples: https://animatai.github.io/examples/
+
+
+__ examples_
+__ `github.com/animatai`_
+

@@ -4,7 +4,7 @@ Animats
 Reference code for:
 
 A General Model for Learning and Decision-Making in Artificial Animals by
-Claes Strannegård, Nils Svangård, Jonas Colmsjö, David Lindström, Joscha Bach
+Claes Strannegård, Nils Svangård, David Lindström, Joscha Bach
 and Bas Steunebrink
 
 Submitted to IJCAI-17 AGA workshop, Melbourne, Australia
