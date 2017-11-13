@@ -195,7 +195,7 @@ class NetworkAgent(Agent):
         # pylint: disable=unused-argument
         return self.all_act
 
-    # update the status after the action has been perfomred and the new state reached
+    # update the status after the action has been performed and the new state reached
     def update_statuses(self):
         s, a, r = self.s, self.a, self.r
         motor_model, network_model, statuses = (self.ndp.motor_model, self.ndp.network_model,
