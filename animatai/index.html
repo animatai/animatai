@@ -38,7 +38,13 @@
     <br/>
   </div>
 
-  <div id='messages' class='rightcolumn'></div>
+  <div class='rightcolumn'>
+    <div id='status'></div>
+    <br/>
+    <div id='U_and_pi'></div>
+    <br/>
+    <div id='messages'></div>
+  </div>
 
   <script>
   ;(function () {
@@ -158,6 +164,10 @@
       this._queue.push(['message', msg, null]);
     };
 
+    F.prototype.printEscapedText = function(element, msg) {
+      this._queue.push(['printEscapedText', element, msg]);
+    };
+
     // terrain must be of the same size as before the update
     F.prototype.setTerrain = function(terrain) {
       this._terrain = terrain.split('\n');
@@ -220,6 +230,9 @@
       if (type === 'message') {
         document.getElementById('messages').innerHTML = escape(p1) + '<br/>' +
           document.getElementById('messages').innerHTML;
+      }
+      if (type === 'printEscapedText') {
+        document.getElementById(p1).innerHTML = escape(p2);
       }
       this._draw();
     };

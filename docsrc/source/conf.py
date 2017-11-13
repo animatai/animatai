@@ -35,7 +35,11 @@ import sphinx_readable_theme
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = ['sphinx.ext.mathjax',
-    'sphinx.ext.githubpages']
+    'sphinx.ext.githubpages',
+    'sphinxcontrib.rawfiles']
+
+# Files you want to copy (using sphinxcontrib.rawfiles)
+rawfiles = ['CNAME']
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']

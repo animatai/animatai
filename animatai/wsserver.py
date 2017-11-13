@@ -106,6 +106,9 @@ class WsServer:
     def send_print_message(self, msg):
         self.send('w.printMessage("' + msg + '")')
 
+    def send_print_escaped_text(self, element, msg):
+        self.send('w.printEscapedText("' + element + '","' + msg + '")')
+
     def send_update_agent(self, agent, state):
         self.send('w.updateAgent("' + agent + '",' + json.dumps(state) + ')')
 

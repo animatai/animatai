@@ -512,6 +512,11 @@ class XYEnvironment(Environment):
             self.wss.send_print_message(msg)
         l.info(msg)
 
+    def show_escaped_text(self, element, msg):
+        if self.wss:
+            self.wss.send_print_escaped_text(element, msg)
+        l.info(element, msg)
+
     def execute_action(self, agent, action, time):
         agent.bump = False
         if action == 'TurnRight':
