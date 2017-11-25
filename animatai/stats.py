@@ -6,9 +6,17 @@
 # Imports
 # =======
 
+import os
 from itertools import chain
 
-from gzutils.gzutils import Logging, save_csv_file
+from gzutils.gzutils import Logging, get_output_dir, save_csv_file
+
+
+# Setup logging
+# =============
+
+DEBUG_MODE = True
+l = Logging('stats', DEBUG_MODE)
 
 
 # The code
@@ -46,8 +54,21 @@ class History:
         return (headers, histories)
 
     @staticmethod
-    def save(output_path):
+    def save(output_dir=None, csv_sep=';'):
         headers, histories = History.get()
+        headers = csv_sep.join(headers)
 
-        save_csv_file('history.csv', histories, headers, output_path)
+        # Save the performance history to file
+        if not output_dir:
+            output_dir = get_output_dir('/../output', __file__)
+        output_path = os.path.join(output_dir, 'history.csv')
+
+        filep = open(output_path, 'w')
+        print(headers, file=filep)
+        print('\n'.join([csv_sep.join([str(x).replace('.', ',')
+                                       for x in line]) for line in histories]),
+              file=filep)
+        filep.close()
+
+        #save_csv_file('history.csv', histories, headers, output_dir)
         l.info('Collected history of ', len(list(zip(*histories))), 'steps')

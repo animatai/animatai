@@ -45,3 +45,5 @@ class TestStats(unittest.TestCase):
                                             [['bla', 0, 'ha', 0, 'da', 0],
                                              ['bla', 1, 'ha', 10, 'da', 100],
                                              ['bla', 2, 'ha', 20, 'da', 200]]))
+
+        History().save()
