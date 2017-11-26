@@ -8,7 +8,7 @@
 # ======
 
 import unittest
-from animatai.stats import History
+from animatai.history import History
 from gzutils.gzutils import get_output_dir, DefaultDict, Logging
 
 
