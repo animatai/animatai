@@ -28,6 +28,7 @@ l = Logging('history', DEBUG_MODE)
 # __history: {dataset: [(col1, ..., coln)]} - dict list with tuples (or lists)
 # __headers: {dataset: [header1, ..., headern]} - dict with column headers
 # __filenames: {filename: [dataset1, ..., datasetn]} - dict mapping datasets to filenaames
+# __env_classes: {env_class_name: [(class_name1, count1, ..., class_namen, countn)]}
 #
 class History:
 
@@ -70,7 +71,6 @@ class History:
             res.extend([cls, env.calc_objects(cls)])
         History.add_row(env.__name__, tuple(res))
 
-
     @staticmethod
     def get_dataset(dataset):
         res = list(History.__headers[dataset])
@@ -109,5 +109,4 @@ class History:
               file=filep)
         filep.close()
 
-        #save_csv_file('history.csv', histories, headers, output_dir)
         l.info('Collected history of ', len(list(zip(*histories))), 'steps')
