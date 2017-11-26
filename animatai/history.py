@@ -16,7 +16,7 @@ from gzutils.gzutils import Logging, get_output_dir, save_csv_file
 # =============
 
 DEBUG_MODE = True
-l = Logging('stats', DEBUG_MODE)
+l = Logging('history', DEBUG_MODE)
 
 
 # The code
@@ -46,7 +46,14 @@ class History:
 
     @staticmethod
     def add_row(dataset, values):
+        if dataset not in History.__history:
+            History.add_dataset(dataset, [dataset])
         History.__history[dataset].append(values)
+
+    # implement the functions necessary to be an observer
+    @staticmethod
+    def agent_step(agent, percept, action, time):
+        History.add_row(agent.__name__, (str(percept), str(action), str(time)))
 
     @staticmethod
     def get(filename=None):

@@ -140,13 +140,11 @@ class TestAgents(unittest.TestCase):
         e.add_thing(t, (1, 1))
 
         e.step(1)
-        l.debug(e.actions, e.rewards)
         self.assertTrue(len(e.actions) == 2)
         self.assertTrue(e.rewards == [1, 1])
 
         e.step(2)
         self.assertTrue(len(e.actions) == 2)
-        l.debug('XXX', e.rewards)
         self.assertTrue(e.rewards == [1, 1])
 
     def test_calc_performance(self):

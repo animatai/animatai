@@ -8,6 +8,7 @@
 
 import random
 
+from collections import defaultdict
 from gzutils.gzutils import DotDict, Logging, save_csv_file
 
 from .utils import turn_heading, distance_squared
@@ -129,9 +130,10 @@ class Environment:
 
         self.things = []
         self.agents = []
-        self.non_spatials = {} # indexed with time
         self.actions = None
         self.rewards = None
+        self.observers = defaultdict(list)
+        self.non_spatials = {} # indexed with time
 
         # These needs to be set in the subclass when rendering in the browser
         self.wss = None
@@ -201,6 +203,10 @@ class Environment:
                     action = agent.program(percept)
                     if hasattr(agent, 'status'):
                         agent.alive = agent.alive and all([status > 0.0 for obj, status in agent.status.items()])
+
+                    for obs in self.observers[agent]:
+                        obs.agent_step(agent, percept, action, time)
+
                 actions1.append(action)
 
             self.save_history()
@@ -305,6 +311,18 @@ class Environment:
         if thing in self.agents:
             self.agents.remove(thing)
 
+    # Adds an observer to the list of observers.
+    # An observer is typically an EnvGUI.
+    # Each observer is notified of changes in move_to and add_thing,
+    # by calling the observer's methods thing_moved(thing)
+    # and thing_added(thing, loc).
+    def add_observer(self, observer, observee=None):
+        observee = observee or self
+        if observee not in self.observers:
+            self.observers[observee] = []
+        self.observers[observee].append(observer)
+
+
 # A direction class for agents that want to move in a 2D plane
 #    Usage:
 #        d = Direction("down")
@@ -376,7 +394,6 @@ class XYEnvironment(Environment):
 
         self.width = options.width or 10
         self.height = options.height or 10
-        self.observers = []
         self.thing_counter = 0
 
         self.ENV_ENCODING = options.ENV_ENCODING or []
@@ -549,7 +566,7 @@ class XYEnvironment(Environment):
             if self.wss and self.wss_cfg.agents[thing.__name__]:
                 self.wss_cfg.agents[thing.__name__]['pos'] = thing.location
                 self.wss.send_update_agent(thing.__name__, self.wss_cfg.agents[thing.__name__])
-            for o in self.observers:
+            for o in self.observers[self]:
                 o.thing_moved(thing)
             for t in thing.holding:
                 self.delete_thing(t)
@@ -586,11 +603,11 @@ class XYEnvironment(Environment):
         if isinstance(thing, Agent):
             for obj in thing.holding:
                 super().delete_thing(obj)
-                for obs in self.observers:
+                for obs in self.observers[self]:
                     obs.thing_deleted(obj)
 
         super().delete_thing(thing)
-        for obs in self.observers:
+        for obs in self.observers[self]:
             obs.thing_deleted(thing)
 
     # Put walls around the entire perimeter of the grid.
@@ -638,14 +655,6 @@ class XYEnvironment(Environment):
         # Save the performance history to file
         save_csv_file('history.csv', histories, headers, self.options.output_path)
         l.info('Collected history of ', len(list(zip(*histories))), 'steps')
-
-    # Adds an observer to the list of observers.
-    # An observer is typically an EnvGUI.
-    # Each observer is notified of changes in move_to and add_thing,
-    # by calling the observer's methods thing_moved(thing)
-    # and thing_added(thing, loc).
-    def add_observer(self, observer):
-        self.observers.append(observer)
 
     # Return the heading to the left (inc=+1) or right (inc=-1) of heading.
     def turn_heading(self, heading, inc):

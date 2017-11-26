@@ -8,8 +8,10 @@
 # ======
 
 import unittest
-from animatai.history import History
+
 from gzutils.gzutils import get_output_dir, DefaultDict, Logging
+from animatai.agents import Agent, Thing, Direction, XYEnvironment
+from animatai.history import History
 
 
 # Setup logging
@@ -53,3 +55,41 @@ class TestStats(unittest.TestCase):
 
         History().save(output_dir=output_dir)
         History().save('recording.csv', output_dir=output_dir)
+
+    def test_step(self):
+        l.info('test_step')
+
+        def program1(percept):
+            self.assertTrue(percept != [])
+            return 'do nothing'
+
+        def program2(percept):
+            self.assertTrue(percept != [])
+            return 'say nothing'
+
+        class Observer:
+            def agent_step(self, agent, percept, action, time):
+                pass
+
+        e = XYEnvironment()
+        a1 = Agent(program1, 'agent1')
+        a2 = Agent(program2, 'agent2')
+        t = Thing()
+        obs = Observer()
+        hist = History()
+
+        e.add_observer(obs, a1)
+        e.add_observer(obs, a2)
+        e.add_observer(hist, a1)
+        e.add_observer(hist, a2)
+
+        e.add_thing(a1, (1, 1))
+        e.add_thing(a2, (1, 1))
+        e.add_thing(t, (1, 1))
+
+        e.step(1)
+        e.step(2)
+
+        l.debug(hist.get() == (['h1 text', 'h1 int', 'h1 text', 'h1 int', 'h1 text', 'h1 int', 'agent1', 'agent2'], [['bla', 0, 'ha', 0, 'da', 0, '([(<alive:True, direction:right, name:agent1 (Agent)>, 0), (<alive:True, direction:right, name:agent2 (Agent)>, 0), (<noname (1, 1) (Thing)>, 0)], {})', 'do nothing', '1', '([(<alive:True, direction:right, name:agent1 (Agent)>, 0), (<alive:True, direction:right, name:agent2 (Agent)>, 0), (<noname (1, 1) (Thing)>, 0)], {})', 'say nothing', '1'], ['bla', 1, 'ha', 10, 'da', 100, '([(<alive:True, direction:right, name:agent1 (Agent)>, 0), (<alive:True, direction:right, name:agent2 (Agent)>, 0), (<noname (1, 1) (Thing)>, 0)], 1)', 'do nothing', '2', '([(<alive:True, direction:right, name:agent1 (Agent)>, 0), (<alive:True, direction:right, name:agent2 (Agent)>, 0), (<noname (1, 1) (Thing)>, 0)], 1)', 'say nothing', '2']]))
+
+        History().save()
