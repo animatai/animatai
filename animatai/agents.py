@@ -124,7 +124,7 @@ def trace_agent(agent):
 # need this.
 class Environment:
     # pylint: disable=too-many-instance-attributes
-    def __init__(self, options=None):
+    def __init__(self, options=None, name='noname'):
         options = options or {}
         self.options = DotDict(options)
 
@@ -132,8 +132,10 @@ class Environment:
         self.agents = []
         self.actions = None
         self.rewards = None
+        self.__name__ = name
         self.observers = defaultdict(list)
         self.non_spatials = {} # indexed with time
+
 
         # These needs to be set in the subclass when rendering in the browser
         self.wss = None
@@ -209,7 +211,11 @@ class Environment:
 
                 actions1.append(action)
 
-            self.save_history()
+            for obs in self.observers[self]:
+                obs.env_step(self)
+
+            # TODO: should be removed, using observers instead that can use Environment.calc_objects
+            #self.save_history()
 
             # execute actions
             rewards = []
@@ -623,18 +629,21 @@ class XYEnvironment(Environment):
         self.x_start, self.y_start = (1, 1)
         self.x_end, self.y_end = (self.width - 1, self.height - 1)
 
+    def calc_objects(self, cls):
+        return len(self.list_things(cls))
+
     # Save history for environment
     def save_history(self):
         if self.save_history_for:
             for cls in self.save_history_for:
                 self.environment_history[cls].append(len(self.list_things(cls)))
 
-        for agent in self.agents:
-            if (hasattr(agent, 'status_history') and
-                    hasattr(agent, 'status') and
-                    agent.status is not None):
-                for objective, history in agent.status_history.items():
-                    history.append(agent.status[objective])
+        #for agent in self.agents:
+        #    if (hasattr(agent, 'status_history') and
+        #            hasattr(agent, 'status') and
+        #            agent.status is not None):
+        #        for objective, history in agent.status_history.items():
+        #            history.append(agent.status[objective])
 
 
 

@@ -9,8 +9,8 @@
 
 import unittest
 
-from gzutils.gzutils import get_output_dir, DefaultDict, Logging
-from animatai.agents import Agent, Thing, Direction, XYEnvironment
+from gzutils.gzutils import get_output_dir, Logging
+from animatai.agents import Agent, Thing, XYEnvironment
 from animatai.history import History
 
 
@@ -34,9 +34,9 @@ class TestStats(unittest.TestCase):
         hist2 = History()
         hist3 = History()
 
-        hist1.add_dataset('h1', ['h1 text', 'h1 int'])
-        hist2.add_dataset('h2', ['h1 text', 'h1 int'])
-        hist3.add_dataset('h3', ['h1 text', 'h1 int'])
+        hist1.add_dataset('h1', ['h1 text', 'h1 int'], 'hist1.csv')
+        hist2.add_dataset('h2', ['h1 text', 'h1 int'], 'hist1.csv')
+        hist3.add_dataset('h3', ['h1 text', 'h1 int'], 'hist1.csv')
 
         History().add_dataset('recording', ['actions'], 'recording.csv')
 
@@ -46,18 +46,16 @@ class TestStats(unittest.TestCase):
             hist3.add_row('h3', ['da', i*100])
             History().add_row('recording', ['action' + str(i)])
 
+        self.assertTrue(History().get('hist1.csv') == (['h1 text', 'h1 int', 'h1 text', 'h1 int', 'h1 text', 'h1 int'],
+                                                       [['bla', 0, 'ha', 0, 'da', 0],
+                                                        ['bla', 1, 'ha', 10, 'da', 100],
+                                                        ['bla', 2, 'ha', 20, 'da', 200]]))
 
-        l.debug(History().get())
-        self.assertTrue(History().get() == (['h1 text', 'h1 int', 'h1 text', 'h1 int', 'h1 text', 'h1 int'],
-                                            [['bla', 0, 'ha', 0, 'da', 0],
-                                             ['bla', 1, 'ha', 10, 'da', 100],
-                                             ['bla', 2, 'ha', 20, 'da', 200]]))
-
-        History().save(output_dir=output_dir)
+        History().save('hist1.csv', output_dir=output_dir)
         History().save('recording.csv', output_dir=output_dir)
 
-    def test_step(self):
-        l.info('test_step')
+    def test_agent_step(self):
+        l.info('test_agent_step')
 
         def program1(percept):
             self.assertTrue(percept != [])
@@ -90,6 +88,45 @@ class TestStats(unittest.TestCase):
         e.step(1)
         e.step(2)
 
-        l.debug(hist.get() == (['h1 text', 'h1 int', 'h1 text', 'h1 int', 'h1 text', 'h1 int', 'agent1', 'agent2'], [['bla', 0, 'ha', 0, 'da', 0, '([(<alive:True, direction:right, name:agent1 (Agent)>, 0), (<alive:True, direction:right, name:agent2 (Agent)>, 0), (<noname (1, 1) (Thing)>, 0)], {})', 'do nothing', '1', '([(<alive:True, direction:right, name:agent1 (Agent)>, 0), (<alive:True, direction:right, name:agent2 (Agent)>, 0), (<noname (1, 1) (Thing)>, 0)], {})', 'say nothing', '1'], ['bla', 1, 'ha', 10, 'da', 100, '([(<alive:True, direction:right, name:agent1 (Agent)>, 0), (<alive:True, direction:right, name:agent2 (Agent)>, 0), (<noname (1, 1) (Thing)>, 0)], 1)', 'do nothing', '2', '([(<alive:True, direction:right, name:agent1 (Agent)>, 0), (<alive:True, direction:right, name:agent2 (Agent)>, 0), (<noname (1, 1) (Thing)>, 0)], 1)', 'say nothing', '2']]))
+        self.assertTrue(hist.get() == (['agent1', 'agent2'], [['([(<alive:True, direction:right, name:agent1 (Agent)>, 0), (<alive:True, direction:right, name:agent2 (Agent)>, 0), (<noname (1, 1) (Thing)>, 0)], {})', 'do nothing', '1', '([(<alive:True, direction:right, name:agent1 (Agent)>, 0), (<alive:True, direction:right, name:agent2 (Agent)>, 0), (<noname (1, 1) (Thing)>, 0)], {})', 'say nothing', '1'], ['([(<alive:True, direction:right, name:agent1 (Agent)>, 0), (<alive:True, direction:right, name:agent2 (Agent)>, 0), (<noname (1, 1) (Thing)>, 0)], 1)', 'do nothing', '2', '([(<alive:True, direction:right, name:agent1 (Agent)>, 0), (<alive:True, direction:right, name:agent2 (Agent)>, 0), (<noname (1, 1) (Thing)>, 0)], 1)', 'say nothing', '2']]))
+
+        History().save()
+
+    def test_env_step(self):
+        l.info('test_env_step')
+
+        def program1(percept):
+            self.assertTrue(percept != [])
+            return 'do nothing'
+
+        class Observer:
+            def env_step(self, env):
+                pass
+
+
+        class T(Thing):
+            pass
+
+        e = XYEnvironment()
+        e.add_thing(Agent(program1, 'agent1'), (1, 1)) # Need an agent that is alive for stop to run
+
+        obs = Observer()
+        hist = History()
+        hist.add_env_classes(e, [T])
+
+        e.add_observer(obs, e)
+        e.add_observer(hist, e)
+
+        e.add_thing(T(1), (1, 1))
+        e.step(1)
+        self.assertTrue(hist.get_dataset(e.__name__)[1][1] == 1)
+
+        e.add_thing(T(2), (1, 1))
+        e.step(2)
+        self.assertTrue(hist.get_dataset(e.__name__)[2][1] == 2)
+
+        e.add_thing(T(3), (1, 1))
+        e.step(3)
+        self.assertTrue(hist.get_dataset(e.__name__)[3][1] == 3)
 
         History().save()

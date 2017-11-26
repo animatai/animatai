@@ -34,6 +34,7 @@ class History:
     __history = {}
     __headers = {}
     __filenames = {}
+    __env_classes = {}
 
     @staticmethod
     def add_dataset(dsname, dsheaders, filename=None):
@@ -44,16 +45,37 @@ class History:
             History.__filenames[filename] = []
         History.__filenames[filename].append(dsname)
 
+    # setup classes to collect stats for in an environment
+    @staticmethod
+    def add_env_classes(env, env_classes, filename=None):
+        History.__env_classes[env.__name__] = env_classes
+        History.add_dataset(env.__name__, [env.__name__], filename)
+
     @staticmethod
     def add_row(dataset, values):
         if dataset not in History.__history:
             History.add_dataset(dataset, [dataset])
         History.__history[dataset].append(values)
 
-    # implement the functions necessary to be an observer
+    # implement the functions necessary to be an agent observer
     @staticmethod
     def agent_step(agent, percept, action, time):
         History.add_row(agent.__name__, (str(percept), str(action), str(time)))
+
+    # implement the functions necessary to be an environment observer
+    @staticmethod
+    def env_step(env):
+        res = []
+        for cls in History.__env_classes[env.__name__]:
+            res.extend([cls, env.calc_objects(cls)])
+        History.add_row(env.__name__, tuple(res))
+
+
+    @staticmethod
+    def get_dataset(dataset):
+        res = list(History.__headers[dataset])
+        res.extend(History.__history[dataset])
+        return res
 
     @staticmethod
     def get(filename=None):
