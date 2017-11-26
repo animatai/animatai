@@ -417,17 +417,16 @@ class XYEnvironment(Environment):
         if options.things:
             self.add_things(options.things)
 
-        self.save_history_for = options.save_history_for or []
+        #self.save_history_for = options.save_history_for or []
 
-        self.environment_history = {}
-        for cls in self.save_history_for:
-            self.environment_history[cls] = []
+        #self.environment_history = {}
+        #for cls in self.save_history_for:
+        #    self.environment_history[cls] = []
 
         # setup rendering in browser if options are there
         if options.wss:
             self.wss = options.wss
             self.wss_cfg = DotDict(options.wss_cfg)
-
 
             self.options.wss_cfg['terrain'] = '\n'.join(self.options.terrain)
 
@@ -634,9 +633,10 @@ class XYEnvironment(Environment):
 
     # Save history for environment
     def save_history(self):
-        if self.save_history_for:
-            for cls in self.save_history_for:
-                self.environment_history[cls].append(len(self.list_things(cls)))
+        pass
+        #if self.save_history_for:
+        #    for cls in self.save_history_for:
+        #        self.environment_history[cls].append(len(self.list_things(cls)))
 
         #for agent in self.agents:
         #    if (hasattr(agent, 'status_history') and
