@@ -9,7 +9,7 @@
 
 import unittest
 from animatai.stats import History
-from gzutils.gzutils import DefaultDict, Logging
+from gzutils.gzutils import get_output_dir, DefaultDict, Logging
 
 
 # Setup logging
@@ -18,6 +18,7 @@ from gzutils.gzutils import DefaultDict, Logging
 DEBUG_MODE = True
 l = Logging('test_stats', DEBUG_MODE)
 
+output_dir = get_output_dir('/../output', file=__file__)
 
 class TestStats(unittest.TestCase):
     def setUp(self):
@@ -35,10 +36,14 @@ class TestStats(unittest.TestCase):
         hist2.add_dataset('h2', ['h1 text', 'h1 int'])
         hist3.add_dataset('h3', ['h1 text', 'h1 int'])
 
+        History().add_dataset('recording', ['actions'], 'recording.csv')
+
         for i in range(0, 3):
             hist1.add_row('h1', ['bla', i])
             hist2.add_row('h2', ['ha', i*10])
             hist3.add_row('h3', ['da', i*100])
+            History().add_row('recording', ['action' + str(i)])
+
 
         l.debug(History().get())
         self.assertTrue(History().get() == (['h1 text', 'h1 int', 'h1 text', 'h1 int', 'h1 text', 'h1 int'],
@@ -46,4 +51,5 @@ class TestStats(unittest.TestCase):
                                              ['bla', 1, 'ha', 10, 'da', 100],
                                              ['bla', 2, 'ha', 20, 'da', 200]]))
 
-        History().save()
+        History().save(output_dir=output_dir)
+        History().save('recording.csv', output_dir=output_dir)

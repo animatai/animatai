@@ -25,43 +25,53 @@ l = Logging('stats', DEBUG_MODE)
 #
 # A singleton collecting history that can be saved to a CSV file
 #
-# __history: [(col1, ..., coln)] - list with tuples (or lists)
+# __history: {dataset: [(col1, ..., coln)]} - dict list with tuples (or lists)
+# __headers: {dataset: [header1, ..., headern]} - dict with column headers
+# __filenames: {filename: [dataset1, ..., datasetn]} - dict mapping datasets to filenaames
 #
 class History:
 
     __history = {}
     __headers = {}
+    __filenames = {}
 
     @staticmethod
-    def add_dataset(name, headers):
-        History.__history[name] = []
-        History.__headers[name] = headers
+    def add_dataset(dsname, dsheaders, filename=None):
+        filename = filename or 'history.csv'
+        History.__history[dsname] = []
+        History.__headers[dsname] = dsheaders
+        if filename not in History.__filenames:
+            History.__filenames[filename] = []
+        History.__filenames[filename].append(dsname)
 
     @staticmethod
     def add_row(dataset, values):
         History.__history[dataset].append(values)
 
     @staticmethod
-    def get():
+    def get(filename=None):
+        filename = filename or 'history.csv'
+
         headers = []
         histories = []
         for dataset, history in History.__history.items():
-            headers.extend(History.__headers[dataset])
-            histories.append(history)
+            if dataset in History.__filenames[filename]:
+                headers.extend(History.__headers[dataset])
+                histories.append(history)
 
         histories = list(zip(*histories))
         histories = list(map(list, map(chain.from_iterable, histories)))
         return (headers, histories)
 
     @staticmethod
-    def save(output_dir=None, csv_sep=';'):
-        headers, histories = History.get()
-        headers = csv_sep.join(headers)
+    def save(filename=None, output_dir=None, csv_sep=';'):
+        filename = filename or 'history.csv'
+        output_dir = output_dir or get_output_dir('/../output', __file__)
 
-        # Save the performance history to file
-        if not output_dir:
-            output_dir = get_output_dir('/../output', __file__)
-        output_path = os.path.join(output_dir, 'history.csv')
+        output_path = os.path.join(output_dir, filename)
+
+        headers, histories = History.get(filename)
+        headers = csv_sep.join(headers)
 
         filep = open(output_path, 'w')
         print(headers, file=filep)
