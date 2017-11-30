@@ -30,8 +30,31 @@
 </head>
 <body>
 
+  <h3>AnimatAI demo</h3>
 
-  <p>Open the console and type World.help() for more information</p>
+  <p>The examples of the <a href='http://animatai.org'>AnimatAI</a> python package are hosted here.
+  The source for the examples is available in <a href='https://github.com/animatai/examples'>github</a>
+  and can also be viewed  <a href='https://animatai.github.io/examples/'>here</a>.
+  </p>
+
+  <p><ul>
+    <li>Enter a world to run. Some examples are: blind_dog, grid, random_mom_and_calf</li>
+    <li>Enter the number of steps, for instance 100</li>
+    <li>Enter a seed for the random generator (can be left blank)</li>
+    <li>Change server to World.LOCAL if you are running the server on your local machine (most users won't change this)</li>
+    <li>Click on run</li>
+  </ul></p>
+
+  <input id='world' type='text' placeholder='world'>
+  <input id='steps' type='text' placeholder='steps'>
+  <input id='seed' type='text' placeholder='seed'>
+  <input id='server' type='text' placeholder='server' value='World.SERVER'>
+  <button id='run_world'>run</button>
+
+  <p>It is also possible to run the examples fom the developer console in the browser.
+  This is the recommended approach when developing new AI Worlds.</p>
+
+  <p>Open the developer console in your browser and type World.help() for more information.</p>
 
   <div class='leftcolumn'>
     <canvas id='field'></canvas>
@@ -54,6 +77,33 @@
 
     var log = console.log.bind(console, 'LOG:');
     var debug = console.log.bind(console, 'DEBUG:');
+
+
+    // MAnage UI
+    // =========
+
+    document.addEventListener('DOMContentLoaded', function(event) {
+      log('DOM fully loaded and parsed');
+
+      document.getElementById('run_world').addEventListener('click', function( event ) {
+        var world = document.getElementById('world').value
+        var steps = document.getElementById('steps').value
+        var seed = document.getElementById('seed').value
+        var server = eval(document.getElementById('server').value)
+        log('Run!', world, steps, seed, server);
+
+        World.initWS(server, function(){
+          if (seed !='') {
+            World.send([world, steps, seed]);
+          } else {
+            World.send([world, steps]);
+          }
+        });
+
+      }, false);
+
+    });
+
 
     // Constants
     // =========
@@ -127,10 +177,13 @@
       print('* World.send([\'random_mom_and_calf\', 50, 1])');
     };
 
-    F.initWS = function(server) {
+    F.initWS = function(server, cb) {
       _ws = new WebSocket(server);
 
-      _ws.onopen = console.log.bind(this);
+      _ws.onopen = function(msg) {
+        console.log(msg);
+        cb();
+      };
       _ws.onclose = console.log.bind(this);
       _ws.onerror = console.log.bind(this);
 
