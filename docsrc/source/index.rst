@@ -26,11 +26,16 @@ Install the framework with: `pip install animatai`
 Check out the examples_ to see how the classes are used.
 
 
+Demo
+-----
+
+The examples_ are hosted at ai.gizur.com_. These examples are continuously updated.
+
 
 .. _`github.com/animatai`: https://github.com/animatai/animatai
 .. _examples: https://animatai.github.io/examples/
-
+.. _ai.gizur.com: http://ai.gizur.com
 
 __ examples_
 __ `github.com/animatai`_
-
+__ ai.gizur.com_
