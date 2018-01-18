@@ -257,7 +257,7 @@ class Environment:
                 return
             self.step(i)
 
-        self.finished()
+        #self.finished()
 
     # Return all things of a given type
     def list_things(self, tclass=Thing):
