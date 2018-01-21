@@ -25,7 +25,7 @@ Install the framework with: `pip install animatai`
 
 Check out the examples_ to see how the classes are used.
 
-When using AnimatAI for research, please cite_ the authors properly. The README
+When using AnimatAI for research, please cite_ the project properly. The README
 contains an example of how to cite_ this work.
 
 
