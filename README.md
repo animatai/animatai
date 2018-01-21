@@ -65,7 +65,7 @@ Upload the build to the public package repo for installation with `pip`:
 Citing AnimatAI
 ===============
 
-When using AnimatAI for research, please cite us. Here is an example in [APA-style](http://blog.apastyle.org/apastyle/2015/01/how-to-cite-software-in-apa-style.html):
+When using AnimatAI in research that is published, please cite the project properly. Here is an example in [APA-style](http://blog.apastyle.org/apastyle/2015/01/how-to-cite-software-in-apa-style.html):
 
 ```
 AnimatAI: A Framework for Artificial General Intelligence [Computer software]. (2018).
