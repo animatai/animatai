@@ -25,6 +25,9 @@ Install the framework with: `pip install animatai`
 
 Check out the examples_ to see how the classes are used.
 
+When using AnimatAI for research, please cite_ the authors properly. The README
+contains an example of how to cite_ this work.
+
 
 Demo
 -----
@@ -35,7 +38,10 @@ The examples_ are hosted at ai.gizur.com_. These examples are continuously updat
 .. _`github.com/animatai`: https://github.com/animatai/animatai
 .. _examples: https://animatai.github.io/examples/
 .. _ai.gizur.com: http://ai.gizur.com
+.. _cite: https://github.com/animatai/animatai#citing-animatai
+
 
 __ examples_
 __ `github.com/animatai`_
 __ ai.gizur.com_
+__ cite_

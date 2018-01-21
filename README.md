@@ -65,10 +65,11 @@ Upload the build to the public package repo for installation with `pip`:
 Citing AnimatAI
 ===============
 
-When using AnimatAI for research, please cite use. Here is an example in [APA-style](http://blog.apastyle.org/apastyle/2015/01/how-to-cite-software-in-apa-style.html):
+When using AnimatAI for research, please cite us. Here is an example in [APA-style](http://blog.apastyle.org/apastyle/2015/01/how-to-cite-software-in-apa-style.html):
 
 ```
-Colmsjö, J., Strannegård, C. (2017). AnimatAI: A Framework for Artificial General Intelligence [Computer software]. Gothenburg, Sweden.
+AnimatAI: A Framework for Artificial General Intelligence [Computer software]. (2017).
+Retrieved from http://animatai.org
 ```
 
 MIT provides a [summary](https://libguides.mit.edu/c.php?g=551454&p=3900280)
