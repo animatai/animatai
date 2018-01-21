@@ -253,7 +253,7 @@ class Environment:
     def run(self, steps=1000):
         for i in range(steps):
             if self.is_done():
-                self.finished()
+                #self.finished()
                 return
             self.step(i)
 

@@ -1,5 +1,5 @@
-Animats
-=======
+AnimatAI: A Framework for Artificial General Intelligence
+=========================================================
 
 Reference code for:
 
@@ -60,6 +60,19 @@ Building will also Create a source distribution in the `dist` folder.
 
 Upload the build to the public package repo for installation with `pip`:
 `twine upload dist/animatai-X.Y.Z.tar.gz`
+
+
+Citing AnimatAI
+===============
+
+When using AnimatAI for research, please cite use. Here is an example in [APA-style](http://blog.apastyle.org/apastyle/2015/01/how-to-cite-software-in-apa-style.html):
+
+```
+Colmsjö, J., Strannegård, C. (2017). AnimatAI: A Framework for Artificial General Intelligence [Computer software]. Gothenburg, Sweden.
+```
+
+MIT provides a [summary](https://libguides.mit.edu/c.php?g=551454&p=3900280)
+about citing software when used in research.
 
 
 Credits
