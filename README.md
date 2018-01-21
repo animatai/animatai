@@ -68,8 +68,14 @@ Citing AnimatAI
 When using AnimatAI for research, please cite us. Here is an example in [APA-style](http://blog.apastyle.org/apastyle/2015/01/how-to-cite-software-in-apa-style.html):
 
 ```
-AnimatAI: A Framework for Artificial General Intelligence [Computer software]. (2017).
+AnimatAI: A Framework for Artificial General Intelligence [Computer software]. (2018).
 Retrieved from http://animatai.org
+```
+
+and an example in [IEEE-style](https://www.ieee.org/documents/style_manual.pdf):
+
+```
+[1] J. Colmsjö, C. Strannegård, AnimatAI: A Framework for Artificial General Intelligence (2018)[Online]. Available: http://animatai.org
 ```
 
 MIT provides a [summary](https://libguides.mit.edu/c.php?g=551454&p=3900280)
