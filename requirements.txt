@@ -19,7 +19,7 @@ numpy==1.12.1
 packaging==16.8
 pkginfo==1.4.1
 Pycco==0.5.1
-Pygments==2.2.0
+Pygments==2.7.4
 pylint==1.7.1
 pyparsing==2.2.0
 pystache==0.5.4
