@@ -35,5 +35,5 @@ sphinxcontrib-websupport==1.0.1
 tqdm==4.15.0
 twine==1.9.1
 urllib3==1.22
-websockets==3.3
+websockets==9.1
 wrapt==1.10.10
