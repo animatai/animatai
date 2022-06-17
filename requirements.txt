@@ -15,7 +15,7 @@ lazy-object-proxy==1.2.2
 Markdown==2.6.8
 MarkupSafe==1.0
 mccabe==0.6.1
-numpy==1.12.1
+numpy==1.21.0
 packaging==16.8
 pkginfo==1.4.1
 Pycco==0.5.1
